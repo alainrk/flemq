@@ -2,6 +2,7 @@ package main
 
 import (
 	"bytes"
+	"crypto/tls"
 	"fmt"
 	"net"
 	"os"
@@ -13,6 +14,10 @@ import (
 var ADDR = ":22123"
 var RW_TIMEOUT = 60 * time.Second
 var RECV_CHUNK_SIZE = 1024
+
+var TLS_ENABLED = true
+var TLS_CERT_FILE = "cert/cert.pem"
+var TLS_KEY_FILE = "cert/key.pem"
 
 // handleSignals registers signal handlers for shutdown
 func handleSignals(closer func()) {
@@ -29,6 +34,7 @@ func handleSignals(closer func()) {
 func handleClient(conn net.Conn) {
 	defer conn.Close()
 
+	fmt.Println("New client:", conn.RemoteAddr())
 	conn.SetDeadline(time.Now().Add(RW_TIMEOUT))
 
 	var received int
@@ -57,8 +63,22 @@ func handleClient(conn net.Conn) {
 }
 
 func main() {
-	// Start TCP server
-	listener, err := net.Listen("tcp", ADDR)
+	var err error
+	var listener net.Listener
+
+	if TLS_ENABLED {
+		cert, err := tls.LoadX509KeyPair(TLS_CERT_FILE, TLS_KEY_FILE)
+		if err != nil {
+			fmt.Println("Error loading cert:", err)
+			return
+		}
+
+		config := &tls.Config{Certificates: []tls.Certificate{cert}}
+		listener, err = tls.Listen("tcp", ADDR, config)
+	} else {
+		listener, err = net.Listen("tcp", ADDR)
+	}
+
 	if err != nil {
 		fmt.Println("Error:", err)
 		return

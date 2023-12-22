@@ -2,10 +2,6 @@
 dev:
 	air
 
-.PHONY: example
-example:
-	@go run example/main.go
-
 .PHONY: test
 test:
 	@go test -v -race -coverprofile /tmp/c.out ./...
@@ -14,4 +10,5 @@ test:
 # Generate self-signed certificate
 cert:
 	@mkdir -p cert
-	@openssl req -newkey rsa:2048 -new -nodes -x509 -days 3650 -keyout cert/key.pem -out cert/cert.pem
+	@openssl req -x509 -nodes -days 99999 -newkey rsa:2048 -keyout cert/key.pem -out cert/cert.pem -config cert.conf -extensions 'v3_req'
+
