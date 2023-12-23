@@ -1,13 +1,14 @@
 package server
 
 import (
-	"bytes"
+	"bufio"
 	"crypto/tls"
 	"log"
 	"net"
 	"time"
 
 	"github.com/alainrk/flemq/config"
+	"github.com/alainrk/flemq/flep"
 	"github.com/google/uuid"
 )
 
@@ -24,6 +25,7 @@ type Server struct {
 type Client struct {
 	Id         uuid.UUID
 	Connection net.Conn
+	FLEPReader *flep.Reader
 }
 
 func NewServer(c config.Config) (server *Server, closer func()) {
@@ -78,6 +80,7 @@ func (s Server) NewClient(conn net.Conn) uuid.UUID {
 	c := &Client{
 		Id:         id,
 		Connection: conn,
+		FLEPReader: flep.NewReader(bufio.NewReader(conn)),
 	}
 	s.clients[id] = c
 	return id
@@ -96,27 +99,12 @@ func (s Server) HandleClient(id uuid.UUID) {
 	log.Println("New client:", c.Connection.RemoteAddr())
 	c.Connection.SetDeadline(time.Now().Add(RW_TIMEOUT))
 
-	var received int
-	// The buffer grows as we write into it.
-	// Ref: https://pkg.go.dev/bytes#Buffer
-	buffer := bytes.NewBuffer(nil)
-
-	// Read the data in chunks.
-	for {
-		chunk := make([]byte, RECV_CHUNK_SIZE)
-		read, err := c.Connection.Read(chunk)
-		if err != nil {
-			log.Println(received, buffer.Bytes(), err)
-			return
-		}
-		received += read
-		buffer.Write(chunk[:read])
-
-		if read == 0 || read < RECV_CHUNK_SIZE {
-			break
-		}
+	// Read using the flep reader.
+	command, err := c.FLEPReader.ReadCommand()
+	if err != nil {
+		log.Println("Error:", err)
+		return
 	}
 
-	c.Connection.Write([]byte("OK\n"))
-	log.Println("Recvd:", received, buffer.String())
+	log.Println("Command:", string(command))
 }

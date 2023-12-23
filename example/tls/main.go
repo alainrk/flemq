@@ -32,7 +32,7 @@ func producer() {
 			fmt.Println("Error:", err)
 			return
 		}
-		conn.Write([]byte(`hello world`))
+		conn.Write([]byte(`:hello world`))
 		conn.Close()
 		time.Sleep(1 * time.Second)
 	}
