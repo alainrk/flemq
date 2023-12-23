@@ -1,6 +1,7 @@
 package main
 
 import (
+	"flag"
 	"log"
 	"os"
 	"os/signal"
@@ -23,12 +24,28 @@ func handleSignals(closer func()) {
 	}()
 }
 
-func main() {
-	// TODO: Enable on dev only
-	err := godotenv.Load()
-	if err != nil {
-		log.Fatal("Error loading .env file")
+// setup loads environment variables and flags
+func setup() {
+	devMode := flag.Bool("dev", false, "Enable development mode (loads .env file)")
+	tlsEnabled := flag.Bool("tls", false, "Enable TLS (overrides env var)")
+	flag.Parse()
+
+	if *devMode {
+		log.Println("Development mode enabled, loading .env file...")
+		err := godotenv.Load()
+		if err != nil {
+			log.Fatal("Error loading .env file")
+		}
 	}
+
+	if *tlsEnabled {
+		os.Setenv("FLEMQ_TLS_ENABLED", "true")
+	}
+}
+
+func main() {
+	// Parse flags and load environment variables
+	setup()
 
 	config := config.NewConfig()
 	server, closer := server.NewServer(config)
