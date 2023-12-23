@@ -7,23 +7,25 @@ import (
 	"time"
 )
 
-const ENV_PREFIX = "FLEMQ"
+const ENV_PREFIX = "FLEMQ_"
 
 type Config struct {
-	Addr string
+	Addr string `default:":22123"`
 	TLS  struct {
-		Enabled  bool
+		Enabled  bool `default:"false"`
 		CertFile string
 		KeyFile  string
 	}
 	Connection struct {
-		RWTimeout     time.Duration
-		RecvChunkSize int
+		RWTimeout     time.Duration `default:"60s"`
+		RecvChunkSize int           `default:"1024"`
 	}
 }
 
+// NewConfig returns a new Config struct with default values
+// It loads environment variables with the prefix "FLEMQ_"
 func NewConfig() Config {
-	config := Config{}
+	var config Config
 
 	config.Addr = loadEnv(ENV_PREFIX, "ADDR", ":22123").(string)
 
@@ -40,7 +42,7 @@ func NewConfig() Config {
 
 // No, I'm not gonna use [one of the thousands Go config libraries](https://github.com/avelino/awesome-go?tab=readme-ov-file#configuration)
 func loadEnv(prefix string, name string, def any) any {
-	name = fmt.Sprintf("%s_%s", prefix, name)
+	name = fmt.Sprintf("%s%s", prefix, name)
 
 	switch d := def.(type) {
 	case string:
