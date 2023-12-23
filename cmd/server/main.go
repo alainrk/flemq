@@ -1,20 +1,16 @@
 package main
 
 import (
+	"fmt"
 	"log"
 	"os"
 	"os/signal"
 	"syscall"
-	"time"
+
+	"github.com/alainrk/flemq/config"
+	"github.com/alainrk/flemq/server"
+	"github.com/joho/godotenv"
 )
-
-var ADDR = ":22123"
-var RW_TIMEOUT = 60 * time.Second
-var RECV_CHUNK_SIZE = 1024
-
-var TLS_ENABLED = true
-var TLS_CERT_FILE = "cert/cert.pem"
-var TLS_KEY_FILE = "cert/key.pem"
 
 // handleSignals registers signal handlers for shutdown
 func handleSignals(closer func()) {
@@ -29,7 +25,16 @@ func handleSignals(closer func()) {
 }
 
 func main() {
-	server, closer := NewServer()
+	// TODO: Enable on dev only
+	err := godotenv.Load()
+	if err != nil {
+		log.Fatal("Error loading .env file")
+	}
+
+	config := config.NewConfig()
+	fmt.Println(config)
+
+	server, closer := server.NewServer(config)
 
 	// If killed by SIGTERM
 	handleSignals(closer)

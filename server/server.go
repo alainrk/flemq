@@ -1,4 +1,4 @@
-package main
+package server
 
 import (
 	"bytes"
@@ -7,8 +7,12 @@ import (
 	"net"
 	"time"
 
+	"github.com/alainrk/flemq/config"
 	"github.com/google/uuid"
 )
+
+var RW_TIMEOUT = 60 * time.Second
+var RECV_CHUNK_SIZE = 1024
 
 type ClientStatus string
 
@@ -22,23 +26,23 @@ type Client struct {
 	Connection net.Conn
 }
 
-func NewServer() (server *Server, closer func()) {
+func NewServer(c config.Config) (server *Server, closer func()) {
 	var listener net.Listener
 	var err error
 
-	if TLS_ENABLED {
-		cert, err := tls.LoadX509KeyPair(TLS_CERT_FILE, TLS_KEY_FILE)
+	if c.TLS.Enabled {
+		cert, err := tls.LoadX509KeyPair(c.TLS.CertFile, c.TLS.KeyFile)
 		if err != nil {
 			log.Fatalln("Error loading cert:", err)
 		}
 
-		config := &tls.Config{Certificates: []tls.Certificate{cert}}
-		listener, err = tls.Listen("tcp", ADDR, config)
+		ctls := &tls.Config{Certificates: []tls.Certificate{cert}}
+		listener, err = tls.Listen("tcp", c.Addr, ctls)
 	} else {
-		listener, err = net.Listen("tcp", ADDR)
+		listener, err = net.Listen("tcp", c.Addr)
 	}
 
-	log.Println("Server is listening on", ADDR)
+	log.Println("Server is listening on", c.Addr)
 
 	if err != nil {
 		log.Fatalln("Error:", err)
