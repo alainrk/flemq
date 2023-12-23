@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"log"
 	"os"
 	"os/signal"
@@ -32,8 +31,6 @@ func main() {
 	}
 
 	config := config.NewConfig()
-	fmt.Println(config)
-
 	server, closer := server.NewServer(config)
 
 	// If killed by SIGTERM
