@@ -2,12 +2,12 @@ package server
 
 import (
 	"bufio"
-	"bytes"
 	"crypto/tls"
 	"log"
 	"net"
 	"time"
 
+	"github.com/alainrk/flemq/commands"
 	"github.com/alainrk/flemq/config"
 	"github.com/alainrk/flemq/flep"
 	"github.com/alainrk/flemq/store"
@@ -20,9 +20,9 @@ var RECV_CHUNK_SIZE = 1024
 type ClientStatus string
 
 type Server struct {
-	clients    map[uuid.UUID]*Client
-	listener   net.Listener
-	queueStore store.QueueStore
+	clients  map[uuid.UUID]*Client
+	listener net.Listener
+	commands commands.Commands
 }
 
 type Client struct {
@@ -60,9 +60,9 @@ func NewServer(c config.Config) (server *Server, closer func()) {
 	log.Println("Server is listening on", c.Addr)
 
 	return &Server{
-		clients:    make(map[uuid.UUID]*Client),
-		listener:   listener,
-		queueStore: store.NewMemoryQueueStore(),
+		clients:  make(map[uuid.UUID]*Client),
+		listener: listener,
+		commands: commands.NewCommands(store.NewMemoryQueueStore()),
 	}, closer
 }
 
@@ -113,12 +113,10 @@ func (s Server) HandleClient(id uuid.UUID) {
 		return
 	}
 
-	log.Printf("Request: %+v", req)
-
-	offset, err := s.queueStore.Write(bytes.NewReader(req.Args[1]))
-	if err != nil {
-		log.Println("Error:", err)
-		return
+	switch req.Command {
+	case flep.CommandPush:
+		s.commands.HandlePush(req)
+	case flep.CommandPick:
+		s.commands.HandlePick(req)
 	}
-	log.Println("Offset:", offset)
 }

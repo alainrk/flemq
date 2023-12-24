@@ -11,6 +11,7 @@ type CommandType string
 
 const (
 	CommandPush CommandType = "PUSH"
+	CommandPick CommandType = "PICK"
 )
 
 type Request struct {
@@ -51,6 +52,15 @@ func (r *Reader) ReadRequest() (Request, error) {
 	case CommandPush:
 		if len(args) != 3 {
 			return req, fmt.Errorf("invalid PUSH command, must follow: `PUSH topic message`")
+		}
+		req.Command = command
+		req.Args = args[1:]
+		return req, nil
+
+	// PICK topic offset
+	case CommandPick:
+		if len(args) != 3 {
+			return req, fmt.Errorf("invalid PICK command, must follow: `PICK topic offset`")
 		}
 		req.Command = command
 		req.Args = args[1:]

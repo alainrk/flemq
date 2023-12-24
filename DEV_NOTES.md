@@ -20,3 +20,5 @@
 ## 2023-12-24
 
 - Writing a simple FLEP (flemq procotol) parser with a basic command
+- Adding stupid push command and simple memory storage (cache + mutex)
+  - No persistence, no real queue (offset based on internal counter in memory), no store per topic, nothing, just testing stuff
