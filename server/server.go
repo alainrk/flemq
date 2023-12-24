@@ -40,19 +40,21 @@ func NewServer(c config.Config) (server *Server, closer func()) {
 
 		ctls := &tls.Config{Certificates: []tls.Certificate{cert}}
 		listener, err = tls.Listen("tcp", c.Addr, ctls)
+		if err != nil {
+			log.Fatalln("Error creating a TLS listener:", err)
+		}
 	} else {
 		listener, err = net.Listen("tcp", c.Addr)
-	}
-
-	log.Println("Server is listening on", c.Addr)
-
-	if err != nil {
-		log.Fatalln("Error:", err)
+		if err != nil {
+			log.Fatalln("Error creating a plaintext listener:", err)
+		}
 	}
 
 	closer = func() {
 		listener.Close()
 	}
+
+	log.Println("Server is listening on", c.Addr)
 
 	return &Server{
 		clients:  make(map[uuid.UUID]*Client),
@@ -100,11 +102,11 @@ func (s Server) HandleClient(id uuid.UUID) {
 	c.Connection.SetDeadline(time.Now().Add(RW_TIMEOUT))
 
 	// Read using the flep reader.
-	command, err := c.FLEPReader.ReadCommand()
+	req, err := c.FLEPReader.ReadRequest()
 	if err != nil {
 		log.Println("Error:", err)
 		return
 	}
 
-	log.Println("Command:", string(command))
+	log.Printf("Request: %+v", req)
 }

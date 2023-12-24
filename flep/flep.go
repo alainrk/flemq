@@ -2,19 +2,19 @@ package flep
 
 import (
 	"bufio"
+	"bytes"
 	"fmt"
 )
 
 type CommandType string
 
 const (
-	CommandX CommandType = "X"
-	CommandY CommandType = "Y"
+	CommandPush CommandType = "PUSH"
 )
 
 type Request struct {
 	Command CommandType
-	Args    []string
+	Args    [][]byte
 }
 
 type Reader struct {
@@ -25,18 +25,35 @@ func NewReader(r *bufio.Reader) *Reader {
 	return &Reader{r}
 }
 
-func (r *Reader) ReadCommand() ([]byte, error) {
+// ReadRequest reads a command from the reader and returns a valid Request
+// or an error. ReadRequest will only reject if the command is invalid from
+// a syntax perspective.
+func (r *Reader) ReadRequest() (Request, error) {
+	var req Request
+
 	l, _, err := r.ReadLine()
 	if err != nil {
-		return nil, err
+		return req, err
 	}
 
-	switch l[0] {
-	case '+':
-		return []byte("simple string"), nil
-	case ':':
-		return []byte("integer given"), nil
-	default:
-		return nil, fmt.Errorf("unknown command: %s", l)
+	// Split by whitespace
+	args := bytes.Split(l, []byte(" "))
+	if len(args) == 0 {
+		return req, fmt.Errorf("Invalid command")
 	}
+
+	// First arg is the command
+	command := CommandType(args[0])
+
+	switch command {
+	case CommandPush:
+		if len(args) != 2 {
+			return req, fmt.Errorf("Invalid command")
+		}
+		req.Command = command
+		req.Args = [][]byte{args[1]}
+		return req, nil
+	}
+
+	return req, fmt.Errorf("Invalid command")
 }
