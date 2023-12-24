@@ -2,6 +2,7 @@ package server
 
 import (
 	"bufio"
+	"bytes"
 	"crypto/tls"
 	"log"
 	"net"
@@ -9,6 +10,7 @@ import (
 
 	"github.com/alainrk/flemq/config"
 	"github.com/alainrk/flemq/flep"
+	"github.com/alainrk/flemq/store"
 	"github.com/google/uuid"
 )
 
@@ -18,8 +20,9 @@ var RECV_CHUNK_SIZE = 1024
 type ClientStatus string
 
 type Server struct {
-	clients  map[uuid.UUID]*Client
-	listener net.Listener
+	clients    map[uuid.UUID]*Client
+	listener   net.Listener
+	queueStore store.QueueStore
 }
 
 type Client struct {
@@ -57,8 +60,9 @@ func NewServer(c config.Config) (server *Server, closer func()) {
 	log.Println("Server is listening on", c.Addr)
 
 	return &Server{
-		clients:  make(map[uuid.UUID]*Client),
-		listener: listener,
+		clients:    make(map[uuid.UUID]*Client),
+		listener:   listener,
+		queueStore: store.NewMemoryQueueStore(),
 	}, closer
 }
 
@@ -92,6 +96,7 @@ func (s Server) RemoveClient(id uuid.UUID) {
 	c := s.clients[id]
 	c.Connection.Close()
 	delete(s.clients, id)
+	log.Println("Connected clients:", len(s.clients))
 }
 
 func (s Server) HandleClient(id uuid.UUID) {
@@ -109,4 +114,11 @@ func (s Server) HandleClient(id uuid.UUID) {
 	}
 
 	log.Printf("Request: %+v", req)
+
+	offset, err := s.queueStore.Write(bytes.NewReader(req.Args[1]))
+	if err != nil {
+		log.Println("Error:", err)
+		return
+	}
+	log.Println("Offset:", offset)
 }

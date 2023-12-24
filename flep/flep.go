@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"bytes"
 	"fmt"
+	"strings"
 )
 
 type CommandType string
@@ -39,21 +40,22 @@ func (r *Reader) ReadRequest() (Request, error) {
 	// Split by whitespace
 	args := bytes.Split(l, []byte(" "))
 	if len(args) == 0 {
-		return req, fmt.Errorf("Invalid command")
+		return req, fmt.Errorf("invalid command")
 	}
 
 	// First arg is the command
-	command := CommandType(args[0])
+	command := CommandType(strings.ToUpper(string(args[0])))
 
 	switch command {
+	// PUSH topic message
 	case CommandPush:
-		if len(args) != 2 {
-			return req, fmt.Errorf("Invalid command")
+		if len(args) != 3 {
+			return req, fmt.Errorf("invalid PUSH command, must follow: `PUSH topic message`")
 		}
 		req.Command = command
-		req.Args = [][]byte{args[1]}
+		req.Args = args[1:]
 		return req, nil
 	}
 
-	return req, fmt.Errorf("Invalid command")
+	return req, fmt.Errorf("invalid command")
 }

@@ -16,3 +16,7 @@
 - Refactoring a bit the config stuff as it started to get messy
 - I'm considering adopting a simplified version of redis [RESP](https://redis.io/docs/reference/protocol-spec/) protocol for the communication, it's simple and already implemented in many languages
   - I don't think I need the full resp for now, but it seems a good approach to start with something simple like that
+
+## 2023-12-24
+
+- Writing a simple FLEP (flemq procotol) parser with a basic command
