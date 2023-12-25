@@ -2,7 +2,6 @@ package commands
 
 import (
 	"bytes"
-	"log"
 	"strconv"
 
 	"github.com/alainrk/flemq/flep"
@@ -19,28 +18,25 @@ func NewCommands(queueStore store.QueueStore) Commands {
 	}
 }
 
-func (comm *Commands) HandlePush(req flep.Request) {
+func (comm *Commands) HandlePush(req flep.Request) (uint64, error) {
 	offset, err := comm.queueStore.Write(bytes.NewReader(req.Args[1]))
 	if err != nil {
-		log.Println("Error:", err)
-		return
+		return 0, err
 	}
-	log.Println("Offset:", offset)
+	return offset, nil
 }
 
-func (comm *Commands) HandlePick(req flep.Request) {
+func (comm *Commands) HandlePick(req flep.Request) ([]byte, error) {
 	offset, err := strconv.Atoi(string(req.Args[1]))
 	if err != nil {
-		log.Println("Error:", err)
-		return
+		return nil, err
 	}
 
 	var buf bytes.Buffer
 	err = comm.queueStore.Read(uint64(offset), &buf)
 	if err != nil {
-		log.Println("Error:", err)
-		return
+		return nil, err
 	}
 
-	log.Println("Message:", buf.String())
+	return buf.Bytes(), nil
 }

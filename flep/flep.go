@@ -3,7 +3,6 @@ package flep
 import (
 	"bufio"
 	"bytes"
-	"fmt"
 	"strings"
 )
 
@@ -24,6 +23,20 @@ type Reader struct {
 	*bufio.Reader
 }
 
+type FlepError struct {
+	message string
+}
+
+func NewFlepError(message string) FlepError {
+	return FlepError{
+		message: message,
+	}
+}
+
+func (e FlepError) Error() string {
+	return e.message
+}
+
 func NewReader(r *bufio.Reader) *Reader {
 	return &Reader{r}
 }
@@ -42,7 +55,7 @@ func (r *Reader) ReadRequest() (Request, error) {
 	// Split by whitespace
 	args := bytes.Split(l, []byte(" "))
 	if len(args) == 0 {
-		return req, fmt.Errorf("invalid command")
+		return req, NewFlepError("invalid command")
 	}
 
 	// First arg is the command
@@ -52,7 +65,7 @@ func (r *Reader) ReadRequest() (Request, error) {
 	// PUSH topic message
 	case CommandPush:
 		if len(args) != 3 {
-			return req, fmt.Errorf("invalid PUSH command, must follow: `PUSH topic message`")
+			return req, NewFlepError("invalid PUSH command, must follow: `PUSH topic message`")
 		}
 		req.Command = command
 		req.Args = args[1:]
@@ -61,7 +74,7 @@ func (r *Reader) ReadRequest() (Request, error) {
 	// PICK topic offset
 	case CommandPick:
 		if len(args) != 3 {
-			return req, fmt.Errorf("invalid PICK command, must follow: `PICK topic offset`")
+			return req, NewFlepError("invalid PICK command, must follow: `PICK topic offset`")
 		}
 		req.Command = command
 		req.Args = args[1:]
@@ -70,11 +83,11 @@ func (r *Reader) ReadRequest() (Request, error) {
 	// EXIT
 	case CommandExit:
 		if len(args) != 1 {
-			return req, fmt.Errorf("invalid EXIT command, must follow: `EXIT`")
+			return req, NewFlepError("invalid EXIT command, must follow: `EXIT`")
 		}
 		req.Command = command
 		return req, nil
 	}
 
-	return req, fmt.Errorf("invalid command")
+	return req, NewFlepError("invalid command")
 }

@@ -33,8 +33,9 @@ func NewConfig() Config {
 	config.TLS.CertFile = loadEnv(ENV_PREFIX, "TLS_CERT_FILE", "not_set").(string)
 	config.TLS.KeyFile = loadEnv(ENV_PREFIX, "TLS_KEY_FILE", "not_set").(string)
 
-	s := loadEnv(ENV_PREFIX, "RW_TIMEOUT", 60).(int)
+	s := loadEnv(ENV_PREFIX, "RW_TIMEOUT_SEC", 60).(int)
 	config.Connection.RWTimeout = time.Duration(s) * time.Second
+	fmt.Println("TIMEOUT:", os.Getenv("FLEMQ_RW_TIMEOUT_SEC"), config.Connection.RWTimeout)
 	config.Connection.RecvChunkSize = loadEnv(ENV_PREFIX, "RECV_CHUNK_SIZE", 1024).(int)
 
 	return config

@@ -3,6 +3,8 @@ package server
 import (
 	"bufio"
 	"crypto/tls"
+	"errors"
+	"fmt"
 	"log"
 	"net"
 	"time"
@@ -101,29 +103,50 @@ func (s Server) RemoveClient(id uuid.UUID) {
 
 func (s Server) HandleClient(id uuid.UUID) {
 	c := s.clients[id]
-	// XXX: Experimenting with leaving the client connected until timeout/EXIT cmd.
-	// defer s.RemoveClient(id)
+	defer s.RemoveClient(id)
 
 	log.Println("New client:", c.Connection.RemoteAddr())
 	c.Connection.SetDeadline(time.Now().Add(RW_TIMEOUT))
 
+repl:
 	// Read using the flep reader.
 	for {
 		req, err := c.FLEPReader.ReadRequest()
 		if err != nil {
+			if errors.As(err, &flep.FlepError{}) {
+				// TODO: Handle timeout here
+				log.Println("Error:", err)
+				c.Connection.Write([]byte(fmt.Sprintf("-ERR %s\r\n", err)))
+				continue
+			}
 			log.Println("Error:", err)
-			return
+			break repl
 		}
 
 		switch req.Command {
+
 		case flep.CommandPush:
-			s.commands.HandlePush(req)
+			offset, err := s.commands.HandlePush(req)
+			if err != nil {
+				log.Println("Error:", err)
+				c.Connection.Write([]byte(fmt.Sprintf("-ERR %s\r\n", err)))
+				continue
+			}
+			c.Connection.Write([]byte(fmt.Sprintf(":%d\r\n", offset)))
+
 		case flep.CommandPick:
-			s.commands.HandlePick(req)
+			res, err := s.commands.HandlePick(req)
+			if err != nil {
+				log.Println("Error:", err)
+				c.Connection.Write([]byte(fmt.Sprintf("-ERR %s\r\n", err)))
+				continue
+			}
+			c.Connection.Write([]byte(fmt.Sprintf("$%d\r\n%s\r\n", len(res), res)))
+
 		case flep.CommandExit:
 			log.Println("Client exiting:", c.Connection.RemoteAddr())
-			s.RemoveClient(id)
-			return
+			c.Connection.Write([]byte("+OK\r\n"))
+			break repl
 		}
 	}
 }
