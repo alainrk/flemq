@@ -5,14 +5,14 @@ import (
 	"testing"
 )
 
-const TEST_PREFIX = "TEST"
+const TEST_PREFIX = "TEST_"
 
 func TestLoadEnv(t *testing.T) {
 	tests := []struct {
 		name       string
 		envValue   string
-		defaultVal interface{}
-		expected   interface{}
+		defaultVal any
+		expected   any
 	}{
 		// Test cases for string
 		{"StringSet", "test_value", "default_value", "test_value"},
@@ -31,7 +31,7 @@ func TestLoadEnv(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			os.Setenv(TEST_PREFIX+"_"+tt.name, tt.envValue)
+			os.Setenv(TEST_PREFIX+tt.name, tt.envValue)
 			defer os.Unsetenv(TEST_PREFIX + "_" + tt.name)
 
 			result := loadEnv(TEST_PREFIX, tt.name, tt.defaultVal)
