@@ -31,3 +31,4 @@
   - Write back to the client the response instead of just logging
   - Implement the FLEP stuff for response (Look at RESP for inspiration on data type handling, I could really just steal what I need when I need it)
 - TODO: I need to create a queue store for each topic (implicit topic creation btw for now, will be customizable in the future)
+- Topic creation: for now is implicit, I'm gonna do the above point for now and improve later
