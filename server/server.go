@@ -16,12 +16,10 @@ import (
 	"github.com/google/uuid"
 )
 
-var RW_TIMEOUT = 60 * time.Second
-var RECV_CHUNK_SIZE = 1024
-
 type ClientStatus string
 
 type Server struct {
+	config   config.Config
 	clients  map[uuid.UUID]*Client
 	listener net.Listener
 	commands commands.Commands
@@ -62,6 +60,7 @@ func NewServer(c config.Config) (server *Server, closer func()) {
 	log.Println("Server is listening on", c.Addr)
 
 	return &Server{
+		config:   c,
 		clients:  make(map[uuid.UUID]*Client),
 		listener: listener,
 		commands: commands.NewCommands(store.NewMemoryQueueStore()),
@@ -106,7 +105,7 @@ func (s Server) HandleClient(id uuid.UUID) {
 	defer s.RemoveClient(id)
 
 	log.Println("New client:", c.Connection.RemoteAddr())
-	c.Connection.SetDeadline(time.Now().Add(RW_TIMEOUT))
+	c.Connection.SetDeadline(time.Now().Add(s.config.Connection.RWTimeout))
 
 repl:
 	// Read using the flep reader.

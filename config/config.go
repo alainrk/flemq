@@ -17,8 +17,7 @@ type Config struct {
 		KeyFile  string
 	}
 	Connection struct {
-		RWTimeout     time.Duration `default:"60s"`
-		RecvChunkSize int           `default:"1024"`
+		RWTimeout time.Duration `default:"60s"`
 	}
 }
 
@@ -35,8 +34,6 @@ func NewConfig() Config {
 
 	s := loadEnv(ENV_PREFIX, "RW_TIMEOUT_SEC", 60).(int)
 	config.Connection.RWTimeout = time.Duration(s) * time.Second
-	fmt.Println("TIMEOUT:", os.Getenv("FLEMQ_RW_TIMEOUT_SEC"), config.Connection.RWTimeout)
-	config.Connection.RecvChunkSize = loadEnv(ENV_PREFIX, "RECV_CHUNK_SIZE", 1024).(int)
 
 	return config
 }
