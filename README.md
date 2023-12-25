@@ -16,3 +16,12 @@ go run example/tcp/*
 # Send messages to the server (tls)
 go run example/producer-tls/*
 ```
+
+## Quick and dirty usage
+
+```sh
+nc localhost 22123
+> PUSH topic1 message1
+> PICK topic1 0
+> EXIT
+```
