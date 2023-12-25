@@ -105,15 +105,16 @@ func (s Server) HandleClient(id uuid.UUID) {
 	defer s.RemoveClient(id)
 
 	log.Println("New client:", c.Connection.RemoteAddr())
-	c.Connection.SetDeadline(time.Now().Add(s.config.Connection.RWTimeout))
 
 repl:
 	// Read using the flep reader.
 	for {
+		// Refresh timeout
+		c.Connection.SetDeadline(time.Now().Add(s.config.Connection.RWTimeout))
+
 		req, err := c.FLEPReader.ReadRequest()
 		if err != nil {
 			if errors.As(err, &flep.FlepError{}) {
-				// TODO: Handle timeout here
 				log.Println("Error:", err)
 				c.Connection.Write([]byte(fmt.Sprintf("-ERR %s\r\n", err)))
 				continue
