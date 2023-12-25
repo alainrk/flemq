@@ -27,3 +27,7 @@
 ## 2023-12-25
 
 - I'd maybe like to keep the connection open until timeout or explicit termination (EXIT command)
+- TODO: I need to:
+  - Write back to the client the response instead of just logging
+  - Implement the FLEP stuff for response (Look at RESP for inspiration on data type handling, I could really just steal what I need when I need it)
+- TODO: I need to create a queue store for each topic (implicit topic creation btw for now, will be customizable in the future)
