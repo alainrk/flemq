@@ -6,6 +6,12 @@ dev:
 test:
 	@go test -v -race -coverprofile /tmp/c.out ./...
 
+build:
+	@go build -o bin/ ./...
+
+run: build
+	./bin/main
+
 .PHONY: cert
 # Generate self-signed certificate
 cert:
