@@ -12,6 +12,7 @@ type CommandType string
 const (
 	CommandPush CommandType = "PUSH"
 	CommandPick CommandType = "PICK"
+	CommandExit CommandType = "EXIT"
 )
 
 type Request struct {
@@ -64,6 +65,14 @@ func (r *Reader) ReadRequest() (Request, error) {
 		}
 		req.Command = command
 		req.Args = args[1:]
+		return req, nil
+
+	// EXIT
+	case CommandExit:
+		if len(args) != 1 {
+			return req, fmt.Errorf("invalid EXIT command, must follow: `EXIT`")
+		}
+		req.Command = command
 		return req, nil
 	}
 

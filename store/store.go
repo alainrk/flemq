@@ -25,23 +25,21 @@ func NewMemoryQueueStore() *MemoryQueueStore {
 }
 
 func (s *MemoryQueueStore) Write(reader io.Reader) (offset uint64, err error) {
-	s.mu.Lock()
-	defer s.mu.Unlock()
-
 	buf, err := io.ReadAll(reader)
 	if err != nil {
 		return 0, err
 	}
 
+	// Restrict critical section to the minimum
+	s.mu.Lock()
 	s.data[s.counter] = buf
 	s.counter++
+	s.mu.Unlock()
+
 	return s.counter - 1, nil
 }
 
 func (s *MemoryQueueStore) Read(offset uint64, writer io.Writer) error {
-	s.mu.Lock()
-	defer s.mu.Unlock()
-
 	if _, ok := s.data[offset]; !ok {
 		return fmt.Errorf("offset %d not found", offset)
 	}

@@ -23,3 +23,7 @@
 - Adding stupid push command and simple memory storage (cache + mutex)
   - No persistence, no real queue (offset based on internal counter in memory), no store per topic, nothing, just testing stuff
 - Adding as stupid as the push command, a pick command to retrieve from a specific offset
+
+## 2023-12-25
+
+- I'd maybe like to keep the connection open until timeout or explicit termination (EXIT command)

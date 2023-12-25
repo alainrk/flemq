@@ -101,22 +101,29 @@ func (s Server) RemoveClient(id uuid.UUID) {
 
 func (s Server) HandleClient(id uuid.UUID) {
 	c := s.clients[id]
-	defer s.RemoveClient(id)
+	// XXX: Experimenting with leaving the client connected until timeout/EXIT cmd.
+	// defer s.RemoveClient(id)
 
 	log.Println("New client:", c.Connection.RemoteAddr())
 	c.Connection.SetDeadline(time.Now().Add(RW_TIMEOUT))
 
 	// Read using the flep reader.
-	req, err := c.FLEPReader.ReadRequest()
-	if err != nil {
-		log.Println("Error:", err)
-		return
-	}
+	for {
+		req, err := c.FLEPReader.ReadRequest()
+		if err != nil {
+			log.Println("Error:", err)
+			return
+		}
 
-	switch req.Command {
-	case flep.CommandPush:
-		s.commands.HandlePush(req)
-	case flep.CommandPick:
-		s.commands.HandlePick(req)
+		switch req.Command {
+		case flep.CommandPush:
+			s.commands.HandlePush(req)
+		case flep.CommandPick:
+			s.commands.HandlePick(req)
+		case flep.CommandExit:
+			log.Println("Client exiting:", c.Connection.RemoteAddr())
+			s.RemoveClient(id)
+			return
+		}
 	}
 }
