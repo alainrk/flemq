@@ -24,3 +24,6 @@ example-plain:
 example-tls:
 	@go run ./example/tls/*.go
 
+.PHONY: kill
+kill:
+	scripts/kill.sh

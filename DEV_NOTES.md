@@ -40,3 +40,6 @@
   - no timeout for the connection
   - client specifies the topic and the offset to start from (included, i.e. 0 from the beginning)
 - For now I'm gonna add a stupid sleep/retry loop that polls the queue for new messages and send them as they come
+- Hiding the store type behind topic interface, I may change my mind later, but for now I don't need to expose it
+- I'd like to have some sort of broadcast/fan-out mechanism to distribute messages coming to a topic
+  - e.g. Each topic once created (or at startup) have a goroutine that keeps track of each subscriber (a channel?) and sends the message to each of them as they come

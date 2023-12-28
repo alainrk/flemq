@@ -1,4 +1,4 @@
-package commands
+package handlers
 
 import (
 	"bytes"
@@ -14,17 +14,17 @@ import (
 	"github.com/alainrk/flemq/topic"
 )
 
-type Commands struct {
+type Handlers struct {
 	topics map[string]*topic.Topic
 }
 
-func NewCommands(queueStore store.QueueStore) Commands {
-	return Commands{
+func NewHandlers(queueStore store.QueueStore) Handlers {
+	return Handlers{
 		topics: make(map[string]*topic.Topic),
 	}
 }
 
-func (comm *Commands) HandlePush(req flep.Request) (uint64, error) {
+func (comm *Handlers) HandlePush(req flep.Request) (uint64, error) {
 	tn := string(req.Args[0])
 
 	// XXX: Auto-create topic if it doesn't exist for now.
@@ -41,7 +41,7 @@ func (comm *Commands) HandlePush(req flep.Request) (uint64, error) {
 	return offset, nil
 }
 
-func (comm *Commands) HandlePick(req flep.Request) ([]byte, error) {
+func (comm *Handlers) HandlePick(req flep.Request) ([]byte, error) {
 	var topic *topic.Topic
 	var ok bool
 	var buf bytes.Buffer
@@ -69,7 +69,7 @@ func (comm *Commands) HandlePick(req flep.Request) ([]byte, error) {
 // TODO: Implement this.
 // - Send all the messages from the offset to the existing offset.
 // - Listen for new messages and send them as they come in (channel/polling on the map/other...)
-func (comm *Commands) HandleSubscribe(conn net.Conn, req flep.Request) error {
+func (comm *Handlers) HandleSubscribe(conn net.Conn, req flep.Request) error {
 	var (
 		topic *topic.Topic
 		ok    bool

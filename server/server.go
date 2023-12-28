@@ -9,9 +9,9 @@ import (
 	"net"
 	"time"
 
-	"github.com/alainrk/flemq/commands"
 	"github.com/alainrk/flemq/config"
 	"github.com/alainrk/flemq/flep"
+	"github.com/alainrk/flemq/handlers"
 	"github.com/alainrk/flemq/store"
 	"github.com/google/uuid"
 )
@@ -22,7 +22,7 @@ type Server struct {
 	config   config.Config
 	clients  map[uuid.UUID]*Client
 	listener net.Listener
-	commands commands.Commands
+	handlers handlers.Handlers
 }
 
 type Client struct {
@@ -63,7 +63,7 @@ func NewServer(c config.Config) (server *Server, closer func()) {
 		config:   c,
 		clients:  make(map[uuid.UUID]*Client),
 		listener: listener,
-		commands: commands.NewCommands(store.NewMemoryQueueStore()),
+		handlers: handlers.NewHandlers(store.NewMemoryQueueStore()),
 	}, closer
 }
 
@@ -127,7 +127,7 @@ repl:
 		switch req.Command {
 
 		case flep.CommandPush:
-			offset, err := s.commands.HandlePush(req)
+			offset, err := s.handlers.HandlePush(req)
 			if err != nil {
 				log.Println("Error:", err)
 				c.Connection.Write([]byte(fmt.Sprintf("-ERR %s\r\n", err)))
@@ -136,7 +136,7 @@ repl:
 			c.Connection.Write([]byte(fmt.Sprintf(":%d\r\n", offset)))
 
 		case flep.CommandPick:
-			res, err := s.commands.HandlePick(req)
+			res, err := s.handlers.HandlePick(req)
 			if err != nil {
 				log.Println("Error:", err)
 				c.Connection.Write([]byte(fmt.Sprintf("-ERR %s\r\n", err)))
@@ -148,7 +148,7 @@ repl:
 			// Long running command, so we reset the deadline
 			// and leave this connection open to be handled.
 			c.Connection.SetDeadline(time.Time{})
-			err := s.commands.HandleSubscribe(c.Connection, req)
+			err := s.handlers.HandleSubscribe(c.Connection, req)
 			if err != nil {
 				log.Println("Error:", err)
 				c.Connection.Write([]byte(fmt.Sprintf("-ERR %s\r\n", err)))
