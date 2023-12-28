@@ -9,9 +9,10 @@ import (
 type CommandType string
 
 const (
-	CommandPush CommandType = "PUSH"
-	CommandPick CommandType = "PICK"
-	CommandExit CommandType = "EXIT"
+	CommandPush      CommandType = "PUSH"
+	CommandPick      CommandType = "PICK"
+	CommandSubscribe CommandType = "SUBSCRIBE"
+	CommandExit      CommandType = "EXIT"
 )
 
 type Request struct {
@@ -75,6 +76,15 @@ func (r *Reader) ReadRequest() (Request, error) {
 	case CommandPick:
 		if len(args) != 3 {
 			return req, NewFlepError("invalid PICK command, must follow: `PICK topic offset`")
+		}
+		req.Command = command
+		req.Args = args[1:]
+		return req, nil
+
+	// SUBSCRIBE topic from_offset_included
+	case CommandSubscribe:
+		if len(args) != 3 {
+			return req, NewFlepError("invalid SUBSCRIBE command, must follow: `SUBSCRIBE topic from_offset_included`")
 		}
 		req.Command = command
 		req.Args = args[1:]

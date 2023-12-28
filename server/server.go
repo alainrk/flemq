@@ -101,7 +101,9 @@ func (s Server) RemoveClient(id uuid.UUID) {
 }
 
 func (s Server) HandleClient(id uuid.UUID) {
-	c := s.clients[id]
+	var (
+		c *Client = s.clients[id]
+	)
 	defer s.RemoveClient(id)
 
 	log.Println("New client:", c.Connection.RemoteAddr())
@@ -109,7 +111,6 @@ func (s Server) HandleClient(id uuid.UUID) {
 repl:
 	// Read using the flep reader.
 	for {
-		// Refresh timeout
 		c.Connection.SetDeadline(time.Now().Add(s.config.Connection.RWTimeout))
 
 		req, err := c.FLEPReader.ReadRequest()
@@ -142,6 +143,19 @@ repl:
 				continue
 			}
 			c.Connection.Write([]byte(fmt.Sprintf("$%d\r\n%s\r\n", len(res), res)))
+
+		case flep.CommandSubscribe:
+			// Long running command, so we reset the deadline
+			// and leave this connection open to be handled.
+			c.Connection.SetDeadline(time.Time{})
+			err := s.commands.HandleSubscribe(c.Connection, req)
+			if err != nil {
+				log.Println("Error:", err)
+				c.Connection.Write([]byte(fmt.Sprintf("-ERR %s\r\n", err)))
+				continue
+			}
+			// TODO: Decide how to handle the end of the subscription (if any).
+			// c.Connection.Write([]byte("OK")))
 
 		case flep.CommandExit:
 			log.Println("Client exiting:", c.Connection.RemoteAddr())

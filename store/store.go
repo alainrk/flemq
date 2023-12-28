@@ -6,6 +6,8 @@ import (
 	"sync"
 )
 
+var ErrorTopicOffsetNotFound = fmt.Errorf("offset not found")
+
 type QueueStore interface {
 	Write(reader io.Reader) (offset uint64, err error)
 	Read(offset uint64, writer io.Writer) error
@@ -43,7 +45,7 @@ func (s *MemoryQueueStore) Read(offset uint64, writer io.Writer) error {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 	if _, ok := s.data[offset]; !ok {
-		return fmt.Errorf("offset %d not found", offset)
+		return ErrorTopicOffsetNotFound
 	}
 
 	_, err := writer.Write(s.data[offset])

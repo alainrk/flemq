@@ -33,4 +33,9 @@
 - I need to create a queue store for each topic (implicit topic creation btw for now, will be customizable in the future)
 - Topic creation: for now is implicit, I'm gonna do the above point for now and improve later
 
-## 2023-12-27
+## 2023-12-28
+
+- Adding a subscribe command to the protocol:
+  - it should behave leave the connection open
+  - no timeout for the connection
+  - client specifies the topic and the offset to start from (included, i.e. 0 from the beginning)

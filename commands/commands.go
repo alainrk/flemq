@@ -2,7 +2,9 @@ package commands
 
 import (
 	"bytes"
+	"errors"
 	"fmt"
+	"net"
 	"strconv"
 
 	"github.com/alainrk/flemq/flep"
@@ -67,4 +69,41 @@ func (comm *Commands) HandlePick(req flep.Request) ([]byte, error) {
 	}
 
 	return buf.Bytes(), nil
+}
+
+// TODO: Implement this.
+// - Send all the messages from the offset to the existing offset.
+// - Listen for new messages and send them as they come in (channel/polling on the map/other...)
+func (comm *Commands) HandleSubscribe(conn net.Conn, req flep.Request) error {
+	var topic *Topic
+	var ok bool
+	var buf bytes.Buffer
+
+	offset, err := strconv.Atoi(string(req.Args[1]))
+	if err != nil {
+		return err
+	}
+
+	tn := string(req.Args[0])
+
+	// Topic must exist.
+	if topic, ok = comm.topics[tn]; !ok {
+		return fmt.Errorf("topic %s does not exist", tn)
+	}
+
+	for i := offset; ; i++ {
+		err = topic.store.Read(uint64(offset), &buf)
+		if err != nil {
+			// if err == store.ErrorTopicOffsetNotFound {
+			if errors.Is(err, store.ErrorTopicOffsetNotFound) {
+				// TODO: Remove this print
+				fmt.Printf("offset %d not found\n", i)
+				break
+			}
+			return err
+		}
+
+		conn.Write(buf.Bytes())
+	}
+	return nil
 }
