@@ -11,20 +11,16 @@ import (
 
 	"github.com/alainrk/flemq/flep"
 	"github.com/alainrk/flemq/store"
+	"github.com/alainrk/flemq/topic"
 )
 
 type Commands struct {
-	topics map[string]*Topic
-}
-
-type Topic struct {
-	Name  string
-	store store.QueueStore
+	topics map[string]*topic.Topic
 }
 
 func NewCommands(queueStore store.QueueStore) Commands {
 	return Commands{
-		topics: make(map[string]*Topic),
+		topics: make(map[string]*topic.Topic),
 	}
 }
 
@@ -33,15 +29,12 @@ func (comm *Commands) HandlePush(req flep.Request) (uint64, error) {
 
 	// XXX: Auto-create topic if it doesn't exist for now.
 	if _, ok := comm.topics[tn]; !ok {
-		comm.topics[tn] = &Topic{
-			Name:  tn,
-			store: store.NewMemoryQueueStore(),
-		}
+		comm.topics[tn] = topic.New(tn)
 	}
 
 	topic := comm.topics[tn]
 
-	offset, err := topic.store.Write(bytes.NewReader(req.Args[1]))
+	offset, err := topic.Write(bytes.NewReader(req.Args[1]))
 	if err != nil {
 		return 0, err
 	}
@@ -49,7 +42,7 @@ func (comm *Commands) HandlePush(req flep.Request) (uint64, error) {
 }
 
 func (comm *Commands) HandlePick(req flep.Request) ([]byte, error) {
-	var topic *Topic
+	var topic *topic.Topic
 	var ok bool
 	var buf bytes.Buffer
 
@@ -65,7 +58,7 @@ func (comm *Commands) HandlePick(req flep.Request) ([]byte, error) {
 		return nil, fmt.Errorf("topic %s does not exist", tn)
 	}
 
-	err = topic.store.Read(uint64(offset), &buf)
+	err = topic.Read(uint64(offset), &buf)
 	if err != nil {
 		return nil, err
 	}
@@ -78,7 +71,7 @@ func (comm *Commands) HandlePick(req flep.Request) ([]byte, error) {
 // - Listen for new messages and send them as they come in (channel/polling on the map/other...)
 func (comm *Commands) HandleSubscribe(conn net.Conn, req flep.Request) error {
 	var (
-		topic *Topic
+		topic *topic.Topic
 		ok    bool
 		buf   bytes.Buffer
 	)
@@ -98,7 +91,7 @@ func (comm *Commands) HandleSubscribe(conn net.Conn, req flep.Request) error {
 	offset := startingOffset
 	for {
 		buf.Reset()
-		err = topic.store.Read(uint64(offset), &buf)
+		err = topic.Read(uint64(offset), &buf)
 		if err != nil {
 			if errors.Is(err, store.ErrorTopicOffsetNotFound) {
 				// TODO: Poll for new messages.
