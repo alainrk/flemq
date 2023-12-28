@@ -39,8 +39,8 @@ func TestMemoryQueueStore_ReadNonExistentOffset(t *testing.T) {
 		t.Fatalf("Expected error for non-existent offset, but got nil")
 	}
 
-	expectedErrorMessage := fmt.Sprintf("offset %d not found", nonExistentOffset)
-	if err.Error() != expectedErrorMessage {
+	expectedErrorMessage := ErrorTopicOffsetNotFound
+	if err != nil && err != expectedErrorMessage {
 		t.Fatalf("Expected error message '%s', but got '%s'", expectedErrorMessage, err.Error())
 	}
 }
