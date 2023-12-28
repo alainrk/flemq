@@ -39,3 +39,4 @@
   - it should behave leave the connection open
   - no timeout for the connection
   - client specifies the topic and the offset to start from (included, i.e. 0 from the beginning)
+- For now I'm gonna add a stupid sleep/retry loop that polls the queue for new messages and send them as they come
