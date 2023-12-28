@@ -8,7 +8,7 @@
   - Handling sigterm termination
   - Tests with netcat suffer from a stuck issue (>= 1024 chars blocks the write and need connection to be closed), not happening using example
   - Handling different types of buffering on the server, it doesn't seem to affect the nc issue though, learning sth anyway
-- Implementing TLS on the server based on constant (TODO: Move all that stuff to a config file / env vars)
+- Implementing TLS on the server based on constant
 
 ## 2023-12-23
 
