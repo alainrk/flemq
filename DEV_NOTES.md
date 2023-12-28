@@ -43,3 +43,4 @@
 - Hiding the store type behind topic interface, I may change my mind later, but for now I don't need to expose it
 - I'd like to have some sort of broadcast/fan-out mechanism to distribute messages coming to a topic
   - e.g. Each topic once created (or at startup) have a goroutine that keeps track of each subscriber (a channel?) and sends the message to each of them as they come
+- Creating a simple broker to be used internally, so that every topic can be subscribed and implements a publish over it at each write (let's see, I want to experiment this way)
