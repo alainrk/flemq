@@ -1,7 +1,7 @@
 package main
 
 import (
-	"fmt"
+	"log"
 	"net"
 	"sync"
 	"time"
@@ -14,7 +14,7 @@ func producer() {
 	for {
 		conn, err := net.Dial("tcp", SERV_ADDR)
 		if err != nil {
-			fmt.Println("Error:", err)
+			log.Println("Error:", err)
 			return
 		}
 		conn.Write([]byte(`hello world`))

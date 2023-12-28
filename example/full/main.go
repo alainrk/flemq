@@ -2,7 +2,7 @@ package main
 
 import (
 	"context"
-	"fmt"
+	"log"
 	"net"
 	"os"
 	"os/signal"
@@ -17,7 +17,7 @@ func consumer(ctx context.Context) {
 	for {
 		select {
 		case <-ctx.Done():
-			fmt.Println("consumer: stop consuming and exiting...")
+			log.Println("consumer: stop consuming and exiting...")
 			return
 		}
 	}
@@ -27,12 +27,12 @@ func producer(ctx context.Context) {
 	for {
 		select {
 		case <-ctx.Done():
-			fmt.Println("consumer: stop producing and exiting...")
+			log.Println("consumer: stop producing and exiting...")
 			return
 		default:
 			conn, err := net.Dial("tcp", SERV_ADDR)
 			if err != nil {
-				fmt.Println("Error:", err)
+				log.Println("Error:", err)
 				return
 			}
 			conn.Write([]byte(`hello world`))
@@ -70,6 +70,6 @@ func main() {
 	}()
 
 	wg.Wait()
-	fmt.Println("received SIGTERM, exiting")
+	log.Println("received SIGTERM, exiting")
 	os.Exit(0)
 }

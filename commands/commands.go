@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"errors"
 	"fmt"
+	"log"
 	"net"
 	"strconv"
 	"time"
@@ -94,20 +95,21 @@ func (comm *Commands) HandleSubscribe(conn net.Conn, req flep.Request) error {
 		return fmt.Errorf("topic %s does not exist", tn)
 	}
 
-	for offset := startingOffset; ; offset++ {
+	offset := startingOffset
+	for {
 		buf.Reset()
 		err = topic.store.Read(uint64(offset), &buf)
 		if err != nil {
 			if errors.Is(err, store.ErrorTopicOffsetNotFound) {
-				break
+				// TODO: Poll for new messages.
+				log.Println("Waiting for new messages...")
+				time.Sleep(1 * time.Second)
+				continue
 			}
 			return err
 		}
 
-		// TODO: Remove this
-		time.Sleep(1 * time.Second)
-
 		conn.Write(buf.Bytes())
+		offset++
 	}
-	return nil
 }
