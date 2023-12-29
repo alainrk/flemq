@@ -4,7 +4,7 @@ dev:
 
 .PHONY: test
 test:
-	@go test -v -race -coverprofile /tmp/c.out ./...
+	./test.sh
 
 build:
 	@go build -o bin/ ./...
