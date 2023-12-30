@@ -1,14 +1,18 @@
 package broker
 
+import "log"
+
 type Broker[T any] struct {
+	name      string
 	stopCh    chan struct{}
 	publishCh chan T
 	subCh     chan chan T
 	unsubCh   chan chan T
 }
 
-func NewBroker[T any]() *Broker[T] {
+func NewBroker[T any](name string) *Broker[T] {
 	return &Broker[T]{
+		name:      name,
 		stopCh:    make(chan struct{}),
 		publishCh: make(chan T, 1),
 		subCh:     make(chan chan T, 1),
@@ -17,12 +21,14 @@ func NewBroker[T any]() *Broker[T] {
 }
 
 func (b *Broker[T]) Start() {
+	log.Printf("[Broker %s] Starting...\n", b.name)
 	subs := map[chan T]struct{}{}
 	for {
 		select {
 		case <-b.stopCh:
 			// Close all the channels.
 			for msgCh := range subs {
+				log.Printf("[Broker %s] Closing all the channels\n", b.name)
 				close(msgCh)
 			}
 			return
@@ -44,6 +50,7 @@ func (b *Broker[T]) Start() {
 }
 
 func (b *Broker[T]) Stop() {
+	log.Printf("[Broker %s] Stopping...\n", b.name)
 	close(b.stopCh)
 }
 
