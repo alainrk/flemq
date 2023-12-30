@@ -4,7 +4,7 @@ dev:
 
 .PHONY: test
 test:
-	./test.sh
+	@./test.sh
 
 build:
 	@go build -o bin/ ./...
