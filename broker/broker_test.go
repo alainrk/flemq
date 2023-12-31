@@ -29,14 +29,39 @@ func publisherTest(b *Broker[string], count int) {
 	}
 }
 
+// func TestPublishSubscribe(t *testing.T) {
+// 	subTestPublishSubscribe(t, "1 message 1 subscriber", 1, 1)
+// 	subTestPublishSubscribe(t, "1 message 10 subscribers", 10, 1)
+// 	subTestPublishSubscribe(t, "10 messages 1 subscriber", 1, 10)
+// 	subTestPublishSubscribe(t, "10 messages 10 subscribers", 10, 10)
+// 	subTestPublishSubscribe(t, "100 messages 1 subscriber", 1, 100)
+// 	subTestPublishSubscribe(t, "100 messages 10 subscribers", 10, 100)
+// 	subTestPublishSubscribe(t, "100 messages 100 subscribers", 100, 100)
+// }
+
 func TestPublishSubscribe(t *testing.T) {
-	subTestPublishSubscribe(t, "1 message 1 subscriber", 1, 1)
-	subTestPublishSubscribe(t, "1 message 10 subscribers", 10, 1)
-	subTestPublishSubscribe(t, "10 messages 1 subscriber", 1, 10)
-	subTestPublishSubscribe(t, "10 messages 10 subscribers", 10, 10)
-	subTestPublishSubscribe(t, "100 messages 1 subscriber", 1, 100)
-	subTestPublishSubscribe(t, "100 messages 10 subscribers", 10, 100)
-	subTestPublishSubscribe(t, "100 messages 100 subscribers", 100, 100)
+	tests := []struct {
+		name string
+		nSub int
+		nMsg int
+	}{
+		{"1 message 1 subscriber", 1, 1},
+		{"1 message 10 subscribers", 10, 1},
+		{"10 messages 1 subscriber", 1, 10},
+		{"10 messages 10 subscribers", 10, 10},
+		{"100 messages 1 subscriber", 1, 100},
+		{"100 messages 10 subscribers", 10, 100},
+		{"100 messages 100 subscribers", 100, 100},
+	}
+
+	for _, tc := range tests {
+		tc := tc
+		t.Run(tc.name, func(t *testing.T) {
+			t.Parallel()
+
+			subTestPublishSubscribe(t, tc.name, tc.nSub, tc.nMsg)
+		})
+	}
 }
 
 func subTestPublishSubscribe(t *testing.T, name string, nSub, nMsg int) {
