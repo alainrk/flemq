@@ -1,5 +1,7 @@
 # Flexible Message Queue
 
+![Example](https://github.com/alainrk/seraph/raw/main/assets/flemq.gif)
+
 ## Dev
 
 ```sh
