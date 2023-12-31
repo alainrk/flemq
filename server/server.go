@@ -43,14 +43,12 @@ func NewServer(c config.Config) (server *Server, closer func()) {
 
 		ctls := &tls.Config{Certificates: []tls.Certificate{cert}}
 		listener, err = tls.Listen("tcp", c.Addr, ctls)
-		if err != nil {
-			log.Fatalln("Error creating a TLS listener:", err)
-		}
 	} else {
 		listener, err = net.Listen("tcp", c.Addr)
-		if err != nil {
-			log.Fatalln("Error creating a plaintext listener:", err)
-		}
+	}
+
+	if err != nil {
+		log.Fatalln("Error creating a plaintext listener:", err)
 	}
 
 	closer = func() {

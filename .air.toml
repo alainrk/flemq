@@ -3,7 +3,7 @@ testdata_dir = "testdata"
 tmp_dir = "bin"
 
 [build]
-  bin = "./bin/main --dev"
+  bin = "./scripts/kill.sh && ./bin/main --dev"
   cmd = "go build -o ./bin/main cmd/server/*.go"
   delay = 1000
   exclude_dir = ["assets", "bin", "vendor", "testdata"]

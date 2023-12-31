@@ -81,8 +81,12 @@ func (r *Reader) ReadRequest() (Request, error) {
 		req.Args = args[1:]
 		return req, nil
 
-	// SUBSCRIBE topic from_offset_included
+	// SUBSCRIBE topic [from_offset_included=0]
 	case CommandSubscribe:
+		// Default from_offset_included to 0
+		if len(args) == 2 {
+			args = append(args, []byte("0"))
+		}
 		if len(args) != 3 {
 			return req, NewFlepError("invalid SUBSCRIBE command, must follow: `SUBSCRIBE topic from_offset_included`")
 		}

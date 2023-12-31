@@ -1,29 +1,49 @@
 package topic
 
 import (
+	"bytes"
 	"io"
 
+	"github.com/alainrk/flemq/broker"
 	"github.com/alainrk/flemq/store"
 )
 
 type Topic struct {
-	Name  string
-	store store.QueueStore
+	Name   string
+	Broker *broker.Broker[[]byte]
+	store  store.QueueStore
 }
 
+// New creates a new topic with the given name.
+// It also start a broker for the topic.
 func New(name string) *Topic {
+	broker := broker.NewBroker[[]byte](name)
+	go broker.Start()
 	return &Topic{
-		Name:  name,
-		store: store.NewMemoryQueueStore(),
+		Name:   name,
+		Broker: broker,
+		store:  store.NewMemoryQueueStore(),
 	}
 }
 
 func (t *Topic) Write(reader io.Reader) (offset uint64, err error) {
-	// TODO: Implement any needed topic-specific logic here.
-	return t.store.Write(reader)
+	// TODO: Maybe I can do this stuff in parallel?
+	// Also I'm converting the reader into bytes twice,
+	// on the other hand if the I get huge messages is
+	// a problem for memory until I don't go with io.Copy anyway
+
+	var buf bytes.Buffer
+	tee := io.TeeReader(reader, &buf)
+
+	b, err := io.ReadAll(&buf)
+	if err != nil {
+		return 0, err
+	}
+	t.Broker.Publish(b)
+
+	return t.store.Write(tee)
 }
 
 func (t *Topic) Read(offset uint64, writer io.Writer) error {
-	// TODO: Implement any needed topic-specific logic here.
 	return t.store.Read(offset, writer)
 }

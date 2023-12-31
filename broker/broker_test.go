@@ -12,9 +12,10 @@ import (
 func subscriberTest(s chan string, id int, res *atomic.Int32, subReady *sync.WaitGroup) {
 	i := 0
 	subReady.Done()
-	for range s {
+	for m := range s {
 		i++
 		res.Add(1)
+		fmt.Printf("Client %d got message: %v\n", id, m)
 	}
 
 	fmt.Printf("Client %d done with %d messages\n", id, i)
@@ -105,6 +106,7 @@ func subTestPublishSubscribe(t *testing.T, name string, nSub, nMsg int) {
 				b.Stop()
 				break
 			}
+			fmt.Printf("Got %d messages so far...\n", v)
 		}
 	}()
 

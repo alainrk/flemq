@@ -66,9 +66,11 @@ func (comm *Handlers) HandlePick(req flep.Request) ([]byte, error) {
 	return buf.Bytes(), nil
 }
 
-// TODO: Implement this.
-// - Send all the messages from the offset to the existing offset.
-// - Listen for new messages and send them as they come in (channel/polling on the map/other...)
+// HandleSubscribe handles the subscribe command.
+// This function under normal circumstances should never return.
+// It should:
+//   - Send all the messages from the offset to the existing offset.
+//   - Listen for new messages and send them as they come in (channel/polling on the map/other...)
 func (comm *Handlers) HandleSubscribe(conn net.Conn, req flep.Request) error {
 	var (
 		topic *topic.Topic
@@ -94,15 +96,27 @@ func (comm *Handlers) HandleSubscribe(conn net.Conn, req flep.Request) error {
 		err = topic.Read(uint64(offset), &buf)
 		if err != nil {
 			if errors.Is(err, store.ErrorTopicOffsetNotFound) {
-				// TODO: Poll for new messages.
+				// TODO: Don't poll for new messages but go through the topic's broker subscription instead.
 				log.Println("Waiting for new messages...")
 				time.Sleep(1 * time.Second)
 				continue
+				// break
 			}
 			return err
 		}
 
+		// Send previously received message
+		fmt.Printf("Sending previous offset %d: %s\n", offset, buf.Bytes())
 		conn.Write(buf.Bytes())
 		offset++
 	}
+
+	// Send any other incoming message coming from the topic's broker.
+	s := topic.Broker.Subscribe()
+	for msg := range s {
+		conn.Write(msg)
+	}
+
+	// Should never get here.
+	return nil
 }

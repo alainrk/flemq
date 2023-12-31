@@ -50,3 +50,4 @@
 - Being dumb I didn't remember that unblocking channel send drops the message, so broker sends were broker for the current tests (only noticeable with more messages coming)
   - I could either enforce a buffered channel or accept the best-effort/use a config to specify the behaviour depending on the case
   - I'll start with blocking send for now
+- TODO: In many places I'm going with io.ReadAll instead of io.Copy, consider to switch to that in the future if necessary
