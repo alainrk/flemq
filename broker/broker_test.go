@@ -30,15 +30,25 @@ func publisherTest(b *Broker[string], count int) {
 }
 
 func TestPublishSubscribe(t *testing.T) {
+	subTestPublishSubscribe(t, "1 message 1 subscriber", 1, 1)
+	subTestPublishSubscribe(t, "1 message 10 subscribers", 10, 1)
+	subTestPublishSubscribe(t, "10 messages 1 subscriber", 1, 10)
+	subTestPublishSubscribe(t, "10 messages 10 subscribers", 10, 10)
+	subTestPublishSubscribe(t, "100 messages 1 subscriber", 1, 100)
+	subTestPublishSubscribe(t, "100 messages 10 subscribers", 10, 100)
+	subTestPublishSubscribe(t, "100 messages 100 subscribers", 100, 100)
+}
+
+func subTestPublishSubscribe(t *testing.T, name string, nSub, nMsg int) {
 	var (
 		wg       sync.WaitGroup
 		subReady sync.WaitGroup
 		res      atomic.Int32
 		b        = NewBroker[string]("test")
-		nSub     = 20
-		nMsg     = 90
 		totMsg   = nSub * nMsg
 	)
+
+	fmt.Printf("Running test: %s\n", name)
 
 	res.Store(0)
 
@@ -57,9 +67,8 @@ func TestPublishSubscribe(t *testing.T) {
 		}(i, s)
 	}
 
-	fmt.Println("Waiting for subscribers to be ready...")
+	// Maybe not strictly necessary, but wait for all subscribers to be ready.
 	subReady.Wait()
-	fmt.Println("All subscribers ready!")
 
 	wg.Add(1)
 	go func() {
