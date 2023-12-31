@@ -44,3 +44,9 @@
 - I'd like to have some sort of broadcast/fan-out mechanism to distribute messages coming to a topic
   - e.g. Each topic once created (or at startup) have a goroutine that keeps track of each subscriber (a channel?) and sends the message to each of them as they come
 - Creating a simple broker to be used internally, so that every topic can be subscribed and implements a publish over it at each write (let's see, I want to experiment this way)
+
+## 2023-12-31
+
+- Being dumb I didn't remember that unblocking channel send drops the message, so broker sends were broker for the current tests (only noticeable with more messages coming)
+  - I could either enforce a buffered channel or accept the best-effort/use a config to specify the behaviour depending on the case
+  - I'll start with blocking send for now

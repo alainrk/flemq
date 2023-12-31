@@ -1,6 +1,8 @@
 package broker
 
-import "log"
+import (
+	"log"
+)
 
 type Broker[T any] struct {
 	name      string
@@ -37,13 +39,25 @@ func (b *Broker[T]) Start() {
 		case msgCh := <-b.unsubCh:
 			delete(subs, msgCh)
 		case msg := <-b.publishCh:
+			// TODO: Experiment with non-blocking sends.
+			//
+			// i := 0
+			// log.Printf("[Broker %s] Count Start - Sending \"%v\" to %d channels\n", b.name, msg, len(subs))
+			// for msgCh := range subs {
+			// 	// Select + default is a pattern non-blocking sends.
+			// 	// Non-blocking send to avoid blocking the broker.
+			// 	select {
+			// 	case msgCh <- msg:
+			// 		i++
+			// 	default:
+			// 		// Client not listening yet, drop the message.
+			// 		log.Printf("[Broker %s] Count - Skipping send to channel\n", b.name)
+			// 	}
+			// }
+			// log.Printf("[Broker %s] Count End \"%v\" to channel %d times\n", b.name, msg, i)
+
 			for msgCh := range subs {
-				// Select + default is a pattern non-blocking sends.
-				// Non-blocking send to avoid blocking the broker.
-				select {
-				case msgCh <- msg:
-				default:
-				}
+				msgCh <- msg
 			}
 		}
 	}
