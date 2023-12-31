@@ -12,13 +12,13 @@ import (
 func subscriberTest(s chan string, id int, res *atomic.Int32, subReady *sync.WaitGroup) {
 	i := 0
 	subReady.Done()
-	for m := range s {
+	for range s {
+		// for m := range s {
 		i++
 		res.Add(1)
-		fmt.Printf("Client %d got message: %v\n", id, m)
+		// fmt.Printf("Client %d got message: %v\n", id, m)
 	}
-
-	fmt.Printf("Client %d done with %d messages\n", id, i)
+	// fmt.Printf("Client %d done with %d messages\n", id, i)
 }
 
 func publisherTest(b *Broker[string], count int) {
@@ -68,6 +68,7 @@ func subTestPublishSubscribe(t *testing.T, name string, nSub, nMsg int) {
 	res.Store(0)
 
 	go b.Start()
+
 	// Run go scheduler to allow broker to start.
 	runtime.Gosched()
 
