@@ -1,5 +1,6 @@
-# Flexible Message Queue
+# FleMQ
 
+Flexible Message Queue
 ![Example](https://github.com/alainrk/flemq/raw/main/assets/flemq.gif)
 
 ## Dev
