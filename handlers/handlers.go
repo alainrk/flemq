@@ -4,10 +4,8 @@ import (
 	"bytes"
 	"errors"
 	"fmt"
-	"log"
 	"net"
 	"strconv"
-	"time"
 
 	"github.com/alainrk/flemq/flep"
 	"github.com/alainrk/flemq/store"
@@ -96,11 +94,7 @@ func (comm *Handlers) HandleSubscribe(conn net.Conn, req flep.Request) error {
 		err = topic.Read(uint64(offset), &buf)
 		if err != nil {
 			if errors.Is(err, store.ErrorTopicOffsetNotFound) {
-				// TODO: Don't poll for new messages but go through the topic's broker subscription instead.
-				log.Println("Waiting for new messages...")
-				time.Sleep(1 * time.Second)
-				continue
-				// break
+				break
 			}
 			return err
 		}

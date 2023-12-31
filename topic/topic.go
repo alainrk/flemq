@@ -35,13 +35,14 @@ func (t *Topic) Write(reader io.Reader) (offset uint64, err error) {
 	var buf bytes.Buffer
 	tee := io.TeeReader(reader, &buf)
 
-	b, err := io.ReadAll(&buf)
+	// NOTE: First read from the tee, otherwise the buffer will be empty.
+	b, err := io.ReadAll(tee)
 	if err != nil {
 		return 0, err
 	}
 	t.Broker.Publish(b)
 
-	return t.store.Write(tee)
+	return t.store.Write(&buf)
 }
 
 func (t *Topic) Read(offset uint64, writer io.Writer) error {
