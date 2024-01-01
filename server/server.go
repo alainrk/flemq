@@ -152,8 +152,6 @@ repl:
 				c.Connection.Write([]byte(fmt.Sprintf("-ERR %s\r\n", err)))
 				continue
 			}
-			// TODO: Decide how to handle the end of the subscription (if any).
-			// c.Connection.Write([]byte("OK")))
 
 		case flep.CommandExit:
 			log.Println("Client exiting:", c.Connection.RemoteAddr())
