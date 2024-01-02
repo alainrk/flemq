@@ -29,7 +29,7 @@ func publisherTest(b *Broker[string], count int) {
 	}
 }
 
-func TestPublishSubscribe(t *testing.T) {
+func TestPublishSubscribeBlocking(t *testing.T) {
 	tests := []struct {
 		name string
 		nSub int
@@ -49,12 +49,12 @@ func TestPublishSubscribe(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			t.Parallel()
 
-			subTestPublishSubscribe(t, tc.name, tc.nSub, tc.nMsg)
+			subTestPublishSubscribeBlocking(t, tc.name, tc.nSub, tc.nMsg)
 		})
 	}
 }
 
-func subTestPublishSubscribe(t *testing.T, name string, nSub, nMsg int) {
+func subTestPublishSubscribeBlocking(t *testing.T, name string, nSub, nMsg int) {
 	var (
 		wg       sync.WaitGroup
 		subReady sync.WaitGroup

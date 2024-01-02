@@ -59,3 +59,5 @@
   - TODO: Test non-blocking broker
   - TODO: Address non-blocking issues (also, there could be a best-effort mode of the topic, where you just stream the messages and don't care if there are lost messages)
     - Buffered channels on the client side could be a way to go, but what's the size?
+- I'm going to centralize the response creation itself in the flep module, it doesn't send it, just compose it.
+  - TODO: For big reponses (if any), should I think about streaming the response instead? How to deal with this?
