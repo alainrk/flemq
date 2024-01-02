@@ -4,7 +4,6 @@ import (
 	"bufio"
 	"crypto/tls"
 	"errors"
-	"fmt"
 	"log"
 	"net"
 	"time"
@@ -115,7 +114,8 @@ repl:
 		if err != nil {
 			if errors.As(err, &flep.FlepError{}) {
 				log.Println("Error:", err)
-				c.Connection.Write([]byte(fmt.Sprintf("-ERR %s\r\n", err)))
+				fr := flep.SimpleErrorResponse(err.Error())
+				c.Connection.Write(fr)
 				continue
 			}
 			log.Println("Error:", err)
@@ -128,19 +128,23 @@ repl:
 			offset, err := s.handlers.HandlePush(req)
 			if err != nil {
 				log.Println("Error:", err)
-				c.Connection.Write([]byte(fmt.Sprintf("-ERR %s\r\n", err)))
+				fr := flep.SimpleErrorResponse(err.Error())
+				c.Connection.Write(fr)
 				continue
 			}
-			c.Connection.Write([]byte(fmt.Sprintf(":%d\r\n", offset)))
+			fr := flep.IntResponse(int64(offset))
+			c.Connection.Write(fr)
 
 		case flep.CommandPick:
 			res, err := s.handlers.HandlePick(req)
 			if err != nil {
 				log.Println("Error:", err)
-				c.Connection.Write([]byte(fmt.Sprintf("-ERR %s\r\n", err)))
+				fr := flep.SimpleErrorResponse(err.Error())
+				c.Connection.Write(fr)
 				continue
 			}
-			c.Connection.Write([]byte(fmt.Sprintf("$%d\r\n%s\r\n", len(res), res)))
+			fr := flep.SimpleBytesResponse(res)
+			c.Connection.Write(fr)
 
 		case flep.CommandSubscribe:
 			// Long running command, so we reset the deadline
@@ -149,13 +153,15 @@ repl:
 			err := s.handlers.HandleSubscribe(c.Connection, req)
 			if err != nil {
 				log.Println("Error:", err)
-				c.Connection.Write([]byte(fmt.Sprintf("-ERR %s\r\n", err)))
+				fr := flep.SimpleErrorResponse(err.Error())
+				c.Connection.Write(fr)
 				continue
 			}
 
 		case flep.CommandExit:
 			log.Println("Client exiting:", c.Connection.RemoteAddr())
-			c.Connection.Write([]byte("+OK\r\n"))
+			fr := flep.SimpleStringResponse("OK")
+			c.Connection.Write(fr)
 			break repl
 		}
 	}

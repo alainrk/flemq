@@ -120,6 +120,13 @@ func SimpleStringResponse(s string) []byte {
 	return []byte("+" + s + "\r\n")
 }
 
+// SimpleBytesResponse returns a valid response for a byte slice.
+// It is effectively the same as SimpleStringResponse, but accepts []byte.
+// EOF is included in the response.
+func SimpleBytesResponse(s []byte) []byte {
+	return []byte(fmt.Sprintf("+%s\r\n", s))
+}
+
 // SimpleErrorResponse returns a valid response for an error.
 // EOF is included in the response.
 func SimpleErrorResponse(e string) []byte {

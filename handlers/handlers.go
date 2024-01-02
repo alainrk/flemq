@@ -102,7 +102,8 @@ func (comm *Handlers) HandleSubscribe(conn net.Conn, req flep.Request) error {
 		// Send previously received message
 		fmt.Printf("Sending previous offset %d: %s\n", offset, buf.Bytes())
 		// TODO: Decide how to handle the stream, should we just send everything as as it come or prepend the length? Or maybe use a EOF marker?
-		conn.Write(buf.Bytes())
+		fr := flep.SimpleBytesResponse(buf.Bytes())
+		conn.Write(fr)
 		offset++
 	}
 
@@ -110,7 +111,8 @@ func (comm *Handlers) HandleSubscribe(conn net.Conn, req flep.Request) error {
 	s := topic.Broker.Subscribe()
 	for msg := range s {
 		// TODO: Decide how to handle the stream, should we just send everything as as it come or prepend the length? Or maybe use a EOF marker?
-		conn.Write(msg)
+		fr := flep.SimpleBytesResponse(msg)
+		conn.Write(fr)
 	}
 
 	// Should never get here.
