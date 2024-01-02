@@ -6,15 +6,23 @@ import (
 
 type Broker[T any] struct {
 	name      string
+	blocking  bool
 	stopCh    chan struct{}
 	publishCh chan T
 	subCh     chan chan T
 	unsubCh   chan chan T
 }
 
-func NewBroker[T any](name string) *Broker[T] {
+// NewBroker creates a new broker.
+// If set to blocking, the send will block until the subscriber read the message.
+//
+//	Be careful with this setting as can slow down the broker, the publisher or even block the broker.
+//
+// If set to non-blocking, the send will drop the message if the subscriber is not ready.
+func NewBroker[T any](name string, blocking bool) *Broker[T] {
 	return &Broker[T]{
 		name:      name,
+		blocking:  blocking,
 		stopCh:    make(chan struct{}),
 		publishCh: make(chan T, 1),
 		subCh:     make(chan chan T, 1),
@@ -24,6 +32,15 @@ func NewBroker[T any](name string) *Broker[T] {
 
 func (b *Broker[T]) Start() {
 	log.Printf("[Broker %s] Starting...\n", b.name)
+
+	if b.blocking {
+		b.startBlockingLoop()
+	} else {
+		b.startNonBlockingLoop()
+	}
+}
+
+func (b *Broker[T]) startNonBlockingLoop() {
 	subs := map[chan T]struct{}{}
 	for {
 		select {
@@ -39,23 +56,36 @@ func (b *Broker[T]) Start() {
 		case msgCh := <-b.unsubCh:
 			delete(subs, msgCh)
 		case msg := <-b.publishCh:
-			// TODO: Experiment with non-blocking sends.
-			//
-			// i := 0
-			// log.Printf("[Broker %s] Count Start - Sending \"%v\" to %d channels\n", b.name, msg, len(subs))
-			// for msgCh := range subs {
-			// 	// Select + default is a pattern non-blocking sends.
-			// 	// Non-blocking send to avoid blocking the broker.
-			// 	select {
-			// 	case msgCh <- msg:
-			// 		i++
-			// 	default:
-			// 		// Client not listening yet, drop the message.
-			// 		log.Printf("[Broker %s] Count - Skipping send to channel\n", b.name)
-			// 	}
-			// }
-			// log.Printf("[Broker %s] Count End \"%v\" to channel %d times\n", b.name, msg, i)
+			i := 0
+			for msgCh := range subs {
+				// Select + default is a pattern non-blocking sends.
+				// Non-blocking send to avoid blocking the broker.
+				select {
+				case msgCh <- msg:
+					i++
+				default:
+				}
+			}
+		}
+	}
+}
 
+func (b *Broker[T]) startBlockingLoop() {
+	subs := map[chan T]struct{}{}
+	for {
+		select {
+		case <-b.stopCh:
+			// Close all the channels.
+			for msgCh := range subs {
+				log.Printf("[Broker %s] Closing all the channels\n", b.name)
+				close(msgCh)
+			}
+			return
+		case msgCh := <-b.subCh:
+			subs[msgCh] = struct{}{}
+		case msgCh := <-b.unsubCh:
+			delete(subs, msgCh)
+		case msg := <-b.publishCh:
 			for msgCh := range subs {
 				msgCh <- msg
 			}

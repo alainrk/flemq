@@ -17,7 +17,7 @@ type Topic struct {
 // New creates a new topic with the given name.
 // It also start a broker for the topic.
 func New(name string) *Topic {
-	broker := broker.NewBroker[[]byte](name)
+	broker := broker.NewBroker[[]byte](name, false)
 	go broker.Start()
 	return &Topic{
 		Name:   name,

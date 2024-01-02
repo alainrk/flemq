@@ -52,3 +52,9 @@
   - I'll start with blocking send for now
 - TODO: In many places I'm going with io.ReadAll instead of io.Copy, consider to switch to that in the future if necessary
 - Was using a reader in the topic writer multiple times, having the store not saving data anymore, using tee instead
+
+## 2023-01-02
+
+- Just for fun opening the possibility to have a non blocking broker as well, this will imply other issues anyway
+  - TODO: Test non-blocking broker
+  - TODO: Address non-blocking issues (also, there could be a best-effort mode of the topic, where you just stream the messages and don't care if there are lost messages)

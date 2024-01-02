@@ -59,7 +59,7 @@ func subTestPublishSubscribe(t *testing.T, name string, nSub, nMsg int) {
 		wg       sync.WaitGroup
 		subReady sync.WaitGroup
 		res      atomic.Int32
-		b        = NewBroker[string]("test")
+		b        = NewBroker[string]("test", true)
 		totMsg   = nSub * nMsg
 	)
 
