@@ -3,6 +3,8 @@ package flep
 import (
 	"bufio"
 	"bytes"
+	"fmt"
+	"strconv"
 	"strings"
 )
 
@@ -104,4 +106,37 @@ func (r *Reader) ReadRequest() (Request, error) {
 	}
 
 	return req, NewFlepError("invalid command")
+}
+
+// IntResponse returns a valid response for an integer.
+// EOF is included in the response.
+func IntResponse(i int64) []byte {
+	return []byte(":" + strconv.FormatInt(i, 10) + "\r\n")
+}
+
+// SimpleStringResponse returns a valid response for a string.
+// EOF is included in the response.
+func SimpleStringResponse(s string) []byte {
+	return []byte("+" + s + "\r\n")
+}
+
+// SimpleErrorResponse returns a valid response for an error.
+// EOF is included in the response.
+func SimpleErrorResponse(e string) []byte {
+	return []byte("-" + e + "\r\n")
+}
+
+// BulkStringResponse returns a valid response for a bulk string.
+// EOF is included in the response.
+func BulkStringResponse(s string) []byte {
+	return []byte(fmt.Sprintf("$%d\r\n%s\r\n", len(s), s))
+}
+
+// BooleanResponse returns a valid response for a boolean.
+// EOF is included in the response.
+func BooleanResponse(b bool) []byte {
+	if b {
+		return []byte("#1\r\n")
+	}
+	return []byte("#0\r\n")
 }
