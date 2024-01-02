@@ -58,3 +58,4 @@
 - Just for fun opening the possibility to have a non blocking broker as well, this will imply other issues anyway
   - TODO: Test non-blocking broker
   - TODO: Address non-blocking issues (also, there could be a best-effort mode of the topic, where you just stream the messages and don't care if there are lost messages)
+    - Buffered channels on the client side could be a way to go, but what's the size?
