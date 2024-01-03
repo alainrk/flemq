@@ -42,8 +42,8 @@ func (s *MemoryQueueStore) Write(reader io.Reader) (offset uint64, err error) {
 }
 
 func (s *MemoryQueueStore) Read(offset uint64, writer io.Writer) error {
-	s.mu.Lock()
-	defer s.mu.Unlock()
+	s.mu.RLock()
+	defer s.mu.RUnlock()
 
 	if _, ok := s.data[offset]; !ok {
 		return ErrorTopicOffsetNotFound
