@@ -61,3 +61,7 @@
     - Buffered channels on the client side could be a way to go, but what's the size?
 - I'm going to centralize the response creation itself in the flep module, it doesn't send it, just compose it.
   - TODO: For big reponses (if any), should I think about streaming the response instead? How to deal with this?
+
+## 2023-01-03
+
+- I need to refactor some stuff to create proper interfaces and allow tests and better decoupling
