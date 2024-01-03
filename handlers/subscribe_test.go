@@ -1,14 +1,15 @@
 package handlers
 
 import (
-	"net"
 	"testing"
 )
 
+// TODO
 func Test_HandleSubscribe_RecoverOldMessages(t *testing.T) {
-	client, server := net.Pipe()
-	go func() {
-		server.Close()
-	}()
-	client.Close()
+	// Just taking notes here
+	// client, server := net.Pipe()
+	// go func() {
+	// 	server.Close()
+	// }()
+	// client.Close()
 }
