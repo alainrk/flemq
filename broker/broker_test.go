@@ -21,7 +21,7 @@ func subscriberTest(s chan string, id int, res *atomic.Int32, subReady *sync.Wai
 	// fmt.Printf("Client %d done with %d messages\n", id, i)
 }
 
-func publisherTest(b *Broker[string], count int) {
+func publisherTest(b Broker[string], count int) {
 	for i := 0; i < count; i++ {
 		m := fmt.Sprintf("msg#%d", i)
 		fmt.Printf("Publishing message: %s\n", m)
@@ -59,7 +59,7 @@ func subTestPublishSubscribeBlocking(t *testing.T, name string, nSub, nMsg int) 
 		wg       sync.WaitGroup
 		subReady sync.WaitGroup
 		res      atomic.Int32
-		b        = NewBroker[string]("test", true)
+		b        = New[string]("test", true)
 		totMsg   = nSub * nMsg
 	)
 

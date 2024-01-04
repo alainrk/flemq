@@ -4,7 +4,15 @@ import (
 	"log"
 )
 
-type Broker[T any] struct {
+type Broker[T any] interface {
+	Start()
+	Stop()
+	Subscribe() chan T
+	Unsubscribe(chan T)
+	Publish(T)
+}
+
+type DefaultBroker[T any] struct {
 	name      string
 	blocking  bool
 	stopCh    chan struct{}
@@ -13,14 +21,14 @@ type Broker[T any] struct {
 	unsubCh   chan chan T
 }
 
-// NewBroker creates a new broker.
+// New creates a new DefaultBroker.
 // If set to blocking, the send will block until the subscriber read the message.
 //
 //	Be careful with this setting as can slow down the broker, the publisher or even block the broker.
 //
 // If set to non-blocking, the send will drop the message if the subscriber is not ready.
-func NewBroker[T any](name string, blocking bool) *Broker[T] {
-	return &Broker[T]{
+func New[T any](name string, blocking bool) DefaultBroker[T] {
+	return DefaultBroker[T]{
 		name:      name,
 		blocking:  blocking,
 		stopCh:    make(chan struct{}),
@@ -30,7 +38,7 @@ func NewBroker[T any](name string, blocking bool) *Broker[T] {
 	}
 }
 
-func (b *Broker[T]) Start() {
+func (b DefaultBroker[T]) Start() {
 	log.Printf("[Broker %s] Starting...\n", b.name)
 
 	if b.blocking {
@@ -40,7 +48,7 @@ func (b *Broker[T]) Start() {
 	}
 }
 
-func (b *Broker[T]) startNonBlockingLoop() {
+func (b DefaultBroker[T]) startNonBlockingLoop() {
 	subs := map[chan T]struct{}{}
 	for {
 		select {
@@ -70,7 +78,7 @@ func (b *Broker[T]) startNonBlockingLoop() {
 	}
 }
 
-func (b *Broker[T]) startBlockingLoop() {
+func (b DefaultBroker[T]) startBlockingLoop() {
 	subs := map[chan T]struct{}{}
 	for {
 		select {
@@ -93,21 +101,21 @@ func (b *Broker[T]) startBlockingLoop() {
 	}
 }
 
-func (b *Broker[T]) Stop() {
+func (b DefaultBroker[T]) Stop() {
 	log.Printf("[Broker %s] Stopping...\n", b.name)
 	close(b.stopCh)
 }
 
-func (b *Broker[T]) Subscribe() chan T {
+func (b DefaultBroker[T]) Subscribe() chan T {
 	msgCh := make(chan T, 5)
 	b.subCh <- msgCh
 	return msgCh
 }
 
-func (b *Broker[T]) Unsubscribe(msgCh chan T) {
+func (b DefaultBroker[T]) Unsubscribe(msgCh chan T) {
 	b.unsubCh <- msgCh
 }
 
-func (b *Broker[T]) Publish(msg T) {
+func (b DefaultBroker[T]) Publish(msg T) {
 	b.publishCh <- msg
 }

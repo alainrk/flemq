@@ -20,14 +20,14 @@ type Topic interface {
 // allows to subscribe to the topic.
 type DefaultTopic struct {
 	Name   string
-	broker *broker.Broker[[]byte]
+	broker broker.Broker[[]byte]
 	store  store.QueueStore
 }
 
 // New creates a new topic with the given name.
 // It also start a broker for the topic.
 func New(name string) DefaultTopic {
-	broker := broker.NewBroker[[]byte](name, false)
+	broker := broker.New[[]byte](name, false)
 	go broker.Start()
 	return DefaultTopic{
 		Name:   name,
