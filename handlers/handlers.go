@@ -2,13 +2,12 @@ package handlers
 
 import (
 	"bytes"
-	"errors"
 	"fmt"
 	"net"
 	"strconv"
 
+	"github.com/alainrk/flemq/common"
 	"github.com/alainrk/flemq/flep"
-	"github.com/alainrk/flemq/store"
 	"github.com/alainrk/flemq/topic"
 )
 
@@ -18,7 +17,7 @@ type Handlers struct {
 	topics Topics
 }
 
-func NewHandlers(queueStore store.QueueStore) Handlers {
+func NewHandlers() Handlers {
 	return Handlers{
 		topics: make(Topics),
 	}
@@ -89,7 +88,7 @@ func (comm *Handlers) HandleSubscribe(conn net.Conn, req flep.Request) error {
 		buf.Reset()
 		err = topic.Read(uint64(offset), &buf)
 		if err != nil {
-			if errors.Is(err, store.ErrorTopicOffsetNotFound) {
+			if _, ok := err.(common.OffsetNotFoundError); ok {
 				break
 			}
 			return err

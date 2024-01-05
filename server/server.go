@@ -11,7 +11,6 @@ import (
 	"github.com/alainrk/flemq/config"
 	"github.com/alainrk/flemq/flep"
 	"github.com/alainrk/flemq/handlers"
-	"github.com/alainrk/flemq/store"
 	"github.com/google/uuid"
 )
 
@@ -60,7 +59,7 @@ func NewServer(c config.Config) (server *Server, closer func()) {
 		config:   c,
 		clients:  make(map[uuid.UUID]*Client),
 		listener: listener,
-		handlers: handlers.NewHandlers(store.NewMemoryQueueStore()),
+		handlers: handlers.NewHandlers(),
 	}, closer
 }
 

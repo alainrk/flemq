@@ -5,10 +5,12 @@ import (
 	"fmt"
 	"sync"
 	"testing"
+
+	"github.com/alainrk/flemq/common"
 )
 
 func TestMemoryQueueStore_WriteAndRead(t *testing.T) {
-	store := NewMemoryQueueStore()
+	store := NewMemoryQueue()
 
 	// Test Write and Read
 	data := []byte("test data")
@@ -29,7 +31,7 @@ func TestMemoryQueueStore_WriteAndRead(t *testing.T) {
 }
 
 func TestMemoryQueueStore_ReadNonExistentOffset(t *testing.T) {
-	store := NewMemoryQueueStore()
+	store := NewMemoryQueue()
 
 	// Test Read with non-existent offset
 	nonExistentOffset := uint64(123)
@@ -39,14 +41,13 @@ func TestMemoryQueueStore_ReadNonExistentOffset(t *testing.T) {
 		t.Fatalf("Expected error for non-existent offset, but got nil")
 	}
 
-	expectedErrorMessage := ErrorTopicOffsetNotFound
-	if err != nil && err != expectedErrorMessage {
-		t.Fatalf("Expected error message '%s', but got '%s'", expectedErrorMessage, err.Error())
+	if _, ok := err.(common.OffsetNotFoundError); !ok {
+		t.Fatalf("Expected error of type OffsetNotFoundError, but got %T", err)
 	}
 }
 
 func TestMemoryQueueStore_ConcurrentWritesAndReads(t *testing.T) {
-	store := NewMemoryQueueStore()
+	store := NewMemoryQueue()
 
 	// Test concurrent Writes and Reads
 	n := 200

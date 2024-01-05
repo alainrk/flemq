@@ -32,7 +32,7 @@ func New(name string) DefaultTopic {
 	return DefaultTopic{
 		Name:   name,
 		broker: broker,
-		store:  store.NewMemoryQueueStore(),
+		store:  store.NewMemoryQueue(),
 	}
 }
 

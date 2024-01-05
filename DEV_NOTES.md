@@ -65,3 +65,7 @@
 ## 2023-01-03
 
 - I need to refactor some stuff to create proper interfaces and allow tests and better decoupling
+
+## 2023-01-05
+
+- TODO: Handle connection termination (e.g. client disconnects) during subscription handler (timeout is disabled in this case)
