@@ -9,22 +9,22 @@ import (
 	"time"
 )
 
-func subscriberTest(s chan string, id int, res *atomic.Int32, subReady *sync.WaitGroup) {
+func subscriberTest(t *testing.T, s chan string, id int, res *atomic.Int32, subReady *sync.WaitGroup) {
 	i := 0
 	subReady.Done()
 	for range s {
 		// for m := range s {
 		i++
 		res.Add(1)
-		// fmt.Printf("Client %d got message: %v\n", id, m)
+		// t.Logf("Client %d got message: %v\n", id, m)
 	}
-	// fmt.Printf("Client %d done with %d messages\n", id, i)
+	// t.Logf("Client %d done with %d messages\n", id, i)
 }
 
-func publisherTest(b Broker[string], count int) {
+func publisherTest(t *testing.T, b Broker[string], count int) {
 	for i := 0; i < count; i++ {
 		m := fmt.Sprintf("msg#%d", i)
-		fmt.Printf("Publishing message: %s\n", m)
+		t.Logf("Publishing message: %s\n", m)
 		b.Publish(m)
 	}
 }
@@ -63,7 +63,7 @@ func subTestPublishSubscribeBlocking(t *testing.T, name string, nSub, nMsg int) 
 		totMsg   = nSub * nMsg
 	)
 
-	fmt.Printf("Running test: %s\n", name)
+	t.Logf("Running test: %s\n", name)
 
 	res.Store(0)
 
@@ -79,7 +79,7 @@ func subTestPublishSubscribeBlocking(t *testing.T, name string, nSub, nMsg int) 
 		s := b.Subscribe()
 		go func(i int, s chan string) {
 			defer wg.Done()
-			subscriberTest(s, i, &res, &subReady)
+			subscriberTest(t, s, i, &res, &subReady)
 		}(i, s)
 	}
 
@@ -89,7 +89,7 @@ func subTestPublishSubscribeBlocking(t *testing.T, name string, nSub, nMsg int) 
 	wg.Add(1)
 	go func() {
 		defer wg.Done()
-		publisherTest(b, nMsg)
+		publisherTest(t, b, nMsg)
 	}()
 
 	wg.Add(1)
@@ -107,7 +107,7 @@ func subTestPublishSubscribeBlocking(t *testing.T, name string, nSub, nMsg int) 
 				b.Stop()
 				break
 			}
-			fmt.Printf("Got %d messages so far...\n", v)
+			t.Logf("Got %d messages so far...\n", v)
 		}
 	}()
 
