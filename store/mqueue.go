@@ -27,6 +27,7 @@ func (s *MemoryQueue) Write(reader io.Reader) (offset uint64, err error) {
 		return 0, err
 	}
 
+	// TODO: What about an actor model here instead?
 	// Restrict critical section to the minimum
 	s.mu.Lock()
 	defer s.mu.Unlock()
