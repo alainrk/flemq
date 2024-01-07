@@ -13,6 +13,7 @@ type Topic interface {
 	Read(offset uint64, writer io.Writer) error
 	Subscribe() chan []byte
 	Unsubscribe() chan []byte
+	Close() error
 }
 
 // DefaultTopic implements the Topic interface.
@@ -65,4 +66,8 @@ func (t DefaultTopic) Subscribe() chan []byte {
 
 func (t DefaultTopic) Unsubscribe(c chan []byte) {
 	t.broker.Unsubscribe(c)
+}
+
+func (t DefaultTopic) Close() error {
+	return t.store.Close()
 }

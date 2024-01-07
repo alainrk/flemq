@@ -48,3 +48,7 @@ func (s *MemoryQueue) Read(offset uint64, writer io.Writer) error {
 	_, err := writer.Write(s.data[offset])
 	return err
 }
+
+func (s *MemoryQueue) Close() error {
+	return nil
+}

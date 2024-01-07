@@ -49,7 +49,10 @@ func NewServer(c config.Config) (server *Server, closer func()) {
 		log.Fatalln("Error creating a plaintext listener:", err)
 	}
 
+	handlers := handlers.NewHandlers()
+
 	closer = func() {
+		handlers.Close()
 		listener.Close()
 	}
 
@@ -59,7 +62,7 @@ func NewServer(c config.Config) (server *Server, closer func()) {
 		config:   c,
 		clients:  make(map[uuid.UUID]*Client),
 		listener: listener,
-		handlers: handlers.NewHandlers(),
+		handlers: handlers,
 	}, closer
 }
 

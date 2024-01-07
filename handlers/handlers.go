@@ -3,6 +3,7 @@ package handlers
 import (
 	"bytes"
 	"fmt"
+	"log"
 	"net"
 	"strconv"
 
@@ -23,15 +24,26 @@ func NewHandlers() Handlers {
 	}
 }
 
-func (comm *Handlers) HandlePush(req flep.Request) (uint64, error) {
+func (h *Handlers) Close() error {
+	log.Println("Closing handlers...")
+	for _, t := range h.topics {
+		err := t.Close()
+		if err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+func (h *Handlers) HandlePush(req flep.Request) (uint64, error) {
 	tn := string(req.Args[0])
 
 	// XXX: Auto-creates topic if it doesn't exist for now.
-	if _, ok := comm.topics[tn]; !ok {
-		comm.topics[tn] = topic.New(tn)
+	if _, ok := h.topics[tn]; !ok {
+		h.topics[tn] = topic.New(tn)
 	}
 
-	topic := comm.topics[tn]
+	topic := h.topics[tn]
 
 	offset, err := topic.Write(bytes.NewReader(req.Args[1]))
 	if err != nil {
@@ -40,7 +52,7 @@ func (comm *Handlers) HandlePush(req flep.Request) (uint64, error) {
 	return offset, nil
 }
 
-func (comm *Handlers) HandlePick(req flep.Request) ([]byte, error) {
+func (h *Handlers) HandlePick(req flep.Request) ([]byte, error) {
 	offset, err := strconv.Atoi(string(req.Args[1]))
 	if err != nil {
 		return nil, err
@@ -49,7 +61,7 @@ func (comm *Handlers) HandlePick(req flep.Request) ([]byte, error) {
 	tn := string(req.Args[0])
 
 	// Topic must exist.
-	topic, ok := comm.topics[tn]
+	topic, ok := h.topics[tn]
 	if !ok {
 		return nil, fmt.Errorf("topic %s does not exist", tn)
 	}
@@ -68,7 +80,7 @@ func (comm *Handlers) HandlePick(req flep.Request) ([]byte, error) {
 // It should:
 //   - Send all the messages from the offset to the existing offset.
 //   - Listen for new messages and send them as they come in (channel/polling on the map/other...)
-func (comm *Handlers) HandleSubscribe(conn net.Conn, req flep.Request) error {
+func (h *Handlers) HandleSubscribe(conn net.Conn, req flep.Request) error {
 	startingOffset, err := strconv.Atoi(string(req.Args[1]))
 	if err != nil {
 		return err
@@ -77,7 +89,7 @@ func (comm *Handlers) HandleSubscribe(conn net.Conn, req flep.Request) error {
 	tn := string(req.Args[0])
 
 	// Topic must exist.
-	topic, ok := comm.topics[tn]
+	topic, ok := h.topics[tn]
 	if !ok {
 		return fmt.Errorf("topic %s does not exist", tn)
 	}
