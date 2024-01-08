@@ -1,23 +1,22 @@
 package store
 
 import (
-	"encoding/binary"
-	"io"
 	"os"
 	"sync"
 )
 
-// Needed to store the offset map
-const offsetMapEntrySize = 16 // 8 bytes for key + 8 bytes for value
+// Needed to store the (data_offset, data_size) for each entry in the index file
+// 8 bytes for data_file_offset + 8 bytes for the size of the entry
+const offsetMapEntrySize = 16
 
 type FileQueue struct {
-	dataFile     *os.File
-	indexFile    *os.File
-	offset       uint64
-	offsetMap    map[uint64]uint64
-	offsetFile   *os.File
-	offsetFileMu sync.Mutex
-	mu           sync.Mutex
+	mu       sync.RWMutex
+	dataFile *os.File
+
+	offsetMu  sync.RWMutex
+	offset    uint64
+	offsetMap map[uint64][2]uint64
+	indexFile *os.File
 }
 
 // NewFileQueue creates a new file queue.
@@ -29,9 +28,8 @@ func NewFileQueue(folderPath string) *FileQueue {
 	}
 
 	var (
-		dataFilePath   = folderPath + "/data"
-		indexFilePath  = folderPath + "/index"
-		offsetFilePath = folderPath + "/offset"
+		dataFilePath  = folderPath + "/data"
+		indexFilePath = folderPath + "/index"
 	)
 
 	dataFile, err := os.OpenFile(dataFilePath, os.O_RDWR|os.O_CREATE, 0644)
@@ -44,43 +42,18 @@ func NewFileQueue(folderPath string) *FileQueue {
 		panic(err)
 	}
 
-	offsetFile, err := os.OpenFile(offsetFilePath, os.O_RDWR|os.O_CREATE, 0644)
-	if err != nil {
-		panic(err)
-	}
+	// TODO: Initialize the current offset depending on the index file size
+	offset := 0
 
-	// Initialize offset from the index file size
-	offset, err := offsetFile.Seek(0, io.SeekEnd)
-	if err != nil {
-		panic(err)
-	}
-
-	// Load the offset map from the offset file
 	// TODO: We could just load the needed ones (last X, or until a certain offset)
-	offsetMap := make(map[uint64]uint64)
-	for {
-		var key, value uint64
-		err := binary.Read(offsetFile, binary.LittleEndian, &key)
-		if err == io.EOF {
-			break
-		} else if err != nil {
-			panic(err)
-		}
-		err = binary.Read(offsetFile, binary.LittleEndian, &value)
-		if err != nil {
-			panic(err)
-		}
-		offsetMap[key] = value
-	}
 
 	return &FileQueue{
-		dataFile:     dataFile,
-		indexFile:    indexFile,
-		offset:       uint64(offset),
-		offsetMap:    offsetMap,
-		offsetFile:   offsetFile,
-		offsetFileMu: sync.Mutex{},
-		mu:           sync.Mutex{},
+		dataFile:  dataFile,
+		indexFile: indexFile,
+		offset:    uint64(offset),
+		// offsetMap: offsetMap,
+		offsetMu: sync.RWMutex{},
+		mu:       sync.RWMutex{},
 	}
 }
 
@@ -95,6 +68,30 @@ func createFolderIfNotExists(folderPath string) error {
 	return nil
 }
 
-func (s *FileQueue) Write(reader io.Reader) (offset uint64, err error) {
-	return 0, nil
-}
+// Read reads the data from the given offset and writes it to the given writer.
+// XXX: For now it's based on the assumption that the requested data are already in memory.
+// func (s *FileQueue) Read(offset uint64, writer io.Writer) error {
+// 	s.mu.RLock()
+// 	defer s.mu.RUnlock()
+
+// 	// Retrieve data offset from the offset map
+// 	d, ok := s.offsetMap[offset]
+// 	if !ok {
+// 		return errors.New("offset not found")
+// 	}
+
+// 	offset, size := d[0], d[1]
+
+// 	// Read data from the data file
+// 	_, err := s.dataFile.Seek(int64(offset), io.SeekStart)
+// 	if err != nil {
+// 		return err
+// 	}
+
+// 	_, err = io.Copy(writer, io.LimitReader(s.dataFile, 1))
+// 	if err != nil {
+// 		return err
+// 	}
+
+// 	return nil
+// }
