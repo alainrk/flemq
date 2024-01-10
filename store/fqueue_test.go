@@ -35,6 +35,10 @@ func TestNewFileQueue(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Error checking index file %s, exited with error: %v", testFolder, err)
 	}
+
+	if s.offset != 0 {
+		t.Fatalf("Expected offset to be 0, got %d", s.offset)
+	}
 }
 
 func TestOffsetAtStartup(t *testing.T) {

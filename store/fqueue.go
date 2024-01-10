@@ -26,21 +26,6 @@ type FileQueue struct {
 	indexFile *os.File
 }
 
-// getOffsetAtStartup returns the offset at startup atomically
-func (s *FileQueue) getOffsetAtStartup() (uint64, error) {
-	s.mu.RLock()
-	defer s.mu.RUnlock()
-
-	// Get indexFile size
-	stat, err := s.indexFile.Stat()
-	if err != nil {
-		return 0, err
-	}
-
-	offset := uint64(stat.Size()) / offsetMapEntrySize
-	return offset, nil
-}
-
 // NewFileQueue creates a new file queue.
 // If the given folder does not exist, it will be created.
 func NewFileQueue(folderPath string) *FileQueue {
@@ -64,17 +49,44 @@ func NewFileQueue(folderPath string) *FileQueue {
 		panic(err)
 	}
 
-	// TODO: Initialize the current offset depending on the index file size
-	offset := 0
-
-	// TODO: We could just load the needed ones (last X, or until a certain offset)
-	return &FileQueue{
+	// TODO: Initialize the offsetMap
+	s := &FileQueue{
 		dataFile:  dataFile,
 		indexFile: indexFile,
-		offset:    uint64(offset),
-		// offsetMap: offsetMap,
-		mu: sync.RWMutex{},
+		mu:        sync.RWMutex{},
 	}
+
+	s.offset, err = s.getOffsetAtStartup()
+	if err != nil {
+		panic(err)
+	}
+
+	return s
+}
+
+// TODO
+func (s *FileQueue) Write(reader io.Reader) (offset uint64, err error) {
+	return 0, nil
+}
+
+// TODO
+func (s *FileQueue) Read(offset uint64, writer io.Writer) error {
+	return nil
+}
+
+// getOffsetAtStartup returns the offset at startup atomically
+func (s *FileQueue) getOffsetAtStartup() (uint64, error) {
+	s.mu.RLock()
+	defer s.mu.RUnlock()
+
+	// Get indexFile size
+	stat, err := s.indexFile.Stat()
+	if err != nil {
+		return 0, err
+	}
+
+	offset := uint64(stat.Size()) / offsetMapEntrySize
+	return offset, nil
 }
 
 func createFolderIfNotExists(folderPath string) error {
@@ -85,15 +97,5 @@ func createFolderIfNotExists(folderPath string) error {
 			return err
 		}
 	}
-	return nil
-}
-
-// TODO
-func (s *FileQueue) Write(reader io.Reader) (offset uint64, err error) {
-	return 0, nil
-}
-
-// TODO
-func (s *FileQueue) Read(offset uint64, writer io.Writer) error {
 	return nil
 }
