@@ -1,22 +1,44 @@
 package store
 
 import (
+	"io"
 	"os"
 	"sync"
 )
 
+/*
+	Index file (16 bytes each entry (offset)):
+	Offset i -> i * 8+8 (pos, size in data file)
+
+	Data file:
+	Offset p -> data [p, p+size-1]
+*/
+
 // Needed to store the (data_offset, data_size) for each entry in the index file
 // 8 bytes for data_file_offset + 8 bytes for the size of the entry
-const offsetMapEntrySize = 16
+const offsetMapEntrySize uint64 = 16
 
 type FileQueue struct {
-	mu       sync.RWMutex
-	dataFile *os.File
-
-	offsetMu  sync.RWMutex
+	mu        sync.RWMutex
+	dataFile  *os.File
 	offset    uint64
 	offsetMap map[uint64][2]uint64
 	indexFile *os.File
+}
+
+// getOffsetAtStartup returns the offset at startup atomically
+func (s *FileQueue) getOffsetAtStartup() (uint64, error) {
+	s.mu.RLock()
+	defer s.mu.RUnlock()
+
+	// Get indexFile size
+	stat, err := s.indexFile.Stat()
+	if err != nil {
+		return 0, err
+	}
+
+	offset := uint64(stat.Size()) / offsetMapEntrySize
+	return offset, nil
 }
 
 // NewFileQueue creates a new file queue.
@@ -46,14 +68,12 @@ func NewFileQueue(folderPath string) *FileQueue {
 	offset := 0
 
 	// TODO: We could just load the needed ones (last X, or until a certain offset)
-
 	return &FileQueue{
 		dataFile:  dataFile,
 		indexFile: indexFile,
 		offset:    uint64(offset),
 		// offsetMap: offsetMap,
-		offsetMu: sync.RWMutex{},
-		mu:       sync.RWMutex{},
+		mu: sync.RWMutex{},
 	}
 }
 
@@ -68,30 +88,12 @@ func createFolderIfNotExists(folderPath string) error {
 	return nil
 }
 
-// Read reads the data from the given offset and writes it to the given writer.
-// XXX: For now it's based on the assumption that the requested data are already in memory.
-// func (s *FileQueue) Read(offset uint64, writer io.Writer) error {
-// 	s.mu.RLock()
-// 	defer s.mu.RUnlock()
+// TODO
+func (s *FileQueue) Write(reader io.Reader) (offset uint64, err error) {
+	return 0, nil
+}
 
-// 	// Retrieve data offset from the offset map
-// 	d, ok := s.offsetMap[offset]
-// 	if !ok {
-// 		return errors.New("offset not found")
-// 	}
-
-// 	offset, size := d[0], d[1]
-
-// 	// Read data from the data file
-// 	_, err := s.dataFile.Seek(int64(offset), io.SeekStart)
-// 	if err != nil {
-// 		return err
-// 	}
-
-// 	_, err = io.Copy(writer, io.LimitReader(s.dataFile, 1))
-// 	if err != nil {
-// 		return err
-// 	}
-
-// 	return nil
-// }
+// TODO
+func (s *FileQueue) Read(offset uint64, writer io.Writer) error {
+	return nil
+}
