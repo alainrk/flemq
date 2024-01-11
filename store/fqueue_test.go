@@ -78,8 +78,7 @@ func TestFileQueue(t *testing.T) {
 
 	testFolder := fmt.Sprintf("/tmp/flemq_test_%d", rand.Int())
 	s := NewFileQueue(testFolder)
-	// TODO: uncomment this
-	// defer os.RemoveAll(testFolder)
+	defer os.RemoveAll(testFolder)
 
 	for i := 0; i < len(d); i++ {
 		offset, err = s.Write(bytes.NewReader(d[i]))
