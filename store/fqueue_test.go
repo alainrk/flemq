@@ -1,6 +1,7 @@
 package store
 
 import (
+	"bytes"
 	"fmt"
 	"math/rand"
 	"os"
@@ -59,5 +60,47 @@ func TestOffsetAtStartup(t *testing.T) {
 
 	if offset != 0 {
 		t.Fatalf("Expected offset to be 0, got %d", offset)
+	}
+}
+
+func TestFileQueue(t *testing.T) {
+	var (
+		err    error
+		offset uint64
+		buf    bytes.Buffer
+	)
+
+	d := [][]byte{
+		[]byte(`0. some data xx000`),
+		[]byte(`1. some data xx001`),
+		[]byte(`2. some data xx002`),
+	}
+
+	testFolder := fmt.Sprintf("/tmp/flemq_test_%d", rand.Int())
+	s := NewFileQueue(testFolder)
+	// TODO: uncomment this
+	// defer os.RemoveAll(testFolder)
+
+	for i := 0; i < len(d); i++ {
+		offset, err = s.Write(bytes.NewReader(d[i]))
+		if err != nil {
+			t.Fatalf("Error writing %d data, exited with error: %v", i, err)
+		}
+
+		if offset != uint64(i) {
+			t.Fatalf("Expected offset to be %d, got %d", i, offset)
+		}
+	}
+
+	for i := 0; i < len(d); i++ {
+		buf.Reset()
+		err = s.Read(uint64(i), &buf)
+		if err != nil {
+			t.Fatalf("Error reading %d data, exited with error: %v", i, err)
+		}
+
+		if !bytes.Equal(buf.Bytes(), d[i]) {
+			t.Fatalf("Test %d, expected %s, got %s", i, d[i], buf.Bytes())
+		}
 	}
 }

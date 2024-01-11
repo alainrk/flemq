@@ -122,14 +122,7 @@ func (s *FileQueue) getItem(offset uint64, w io.Writer) error {
 		return err
 	}
 
-	// Get the data from the data file
-	data := make([]byte, dataSize)
 	_, err = s.dataFile.Seek(int64(dataOffset), 0)
-	if err != nil {
-		return err
-	}
-
-	_, err = s.dataFile.Read(data)
 	if err != nil {
 		return err
 	}
