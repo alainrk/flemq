@@ -103,3 +103,52 @@ func TestFileQueue(t *testing.T) {
 		}
 	}
 }
+
+// TODO: Test persistence of data at restart
+func TestFileQueuePersistence(t *testing.T) {
+	var (
+		err    error
+		offset uint64
+		buf    bytes.Buffer
+	)
+
+	d := [][]byte{
+		[]byte(`0. some data xx000`),
+		[]byte(`1. some data xx001`),
+		[]byte(`2. some data xx002`),
+	}
+
+	testFolder := fmt.Sprintf("/tmp/flemq_test_%d", rand.Int())
+	defer os.RemoveAll(testFolder)
+
+	// First queue creation
+	s := NewFileQueue(testFolder)
+
+	for i := 0; i < len(d); i++ {
+		offset, err = s.Write(bytes.NewReader(d[i]))
+		if err != nil {
+			t.Fatalf("Error writing %d data, exited with error: %v", i, err)
+		}
+
+		if offset != uint64(i) {
+			t.Fatalf("Expected offset to be %d, got %d", i, offset)
+		}
+	}
+
+	s.Close()
+
+	// Second queue creation
+	s = NewFileQueue(testFolder)
+
+	for i := 0; i < len(d); i++ {
+		buf.Reset()
+		err = s.Read(uint64(i), &buf)
+		if err != nil {
+			t.Fatalf("Error reading %d data, exited with error: %v", i, err)
+		}
+
+		if !bytes.Equal(buf.Bytes(), d[i]) {
+			t.Fatalf("Test %d, expected %s, got %s", i, d[i], buf.Bytes())
+		}
+	}
+}

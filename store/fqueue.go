@@ -93,6 +93,23 @@ func (s *FileQueue) Read(offset uint64, writer io.Writer) error {
 	return s.getItem(offset, writer)
 }
 
+func (s *FileQueue) Close() error {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+
+	err := s.dataFile.Close()
+	if err != nil {
+		return err
+	}
+
+	err = s.indexFile.Close()
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
 // getItem reads from the index file the offset and size of the data
 // and then reads the data from the data file.
 // It writes the data to the given writer.
