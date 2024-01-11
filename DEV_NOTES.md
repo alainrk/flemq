@@ -72,5 +72,5 @@
 
 ## 2023-01-11
 
-- TODO: Fix EOF error when using fqueue store on subscribe (it gets returned as last element of subscribe topic), troubleshoot why it happens
+- DONE: Fix EOF error when using fqueue store on subscribe (it gets returned as last element of subscribe topic), troubleshoot why it happens
 - TODO: When using fqueue store, I need to restore the existing topics, otherwise weird stuff happens when pushing to a topic name that was already used

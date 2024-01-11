@@ -125,3 +125,5 @@ func TestMemoryQueueWrite(t *testing.T) {
 		t.Fatalf("Expected %s, got %s", d1, buf.Bytes())
 	}
 }
+
+// TODO: Test for non existent offset

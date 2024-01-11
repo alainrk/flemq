@@ -152,3 +152,5 @@ func TestFileQueuePersistence(t *testing.T) {
 		}
 	}
 }
+
+// TODO: Test for non existing offset

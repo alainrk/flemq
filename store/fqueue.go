@@ -2,9 +2,12 @@ package store
 
 import (
 	"encoding/binary"
+	"fmt"
 	"io"
 	"os"
 	"sync"
+
+	"github.com/alainrk/flemq/common"
 )
 
 /*
@@ -87,6 +90,11 @@ func (s *FileQueue) Write(reader io.Reader) (offset uint64, err error) {
 func (s *FileQueue) Read(offset uint64, writer io.Writer) error {
 	s.mu.RLock()
 	defer s.mu.RUnlock()
+
+	// If the offset is equal or greater than the current offset (the next to be writter)
+	if offset >= s.offset {
+		return common.OffsetNotFoundError{Err: fmt.Errorf("offset %d not found", offset)}
+	}
 
 	// TODO: Implement cache and get it from here if exists
 
