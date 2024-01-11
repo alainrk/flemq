@@ -2,6 +2,7 @@ package topic
 
 import (
 	"bytes"
+	"fmt"
 	"io"
 
 	"github.com/alainrk/flemq/broker"
@@ -33,7 +34,9 @@ func New(name string) DefaultTopic {
 	return DefaultTopic{
 		Name:   name,
 		broker: broker,
-		store:  store.NewMemoryQueue(),
+		// store:  store.NewMemoryQueue(),
+		// TODO: Make this configurable and use a proper naming for topics
+		store: store.NewFileQueue(fmt.Sprintf("/tmp/flemq/%s", name)),
 	}
 }
 
