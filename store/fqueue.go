@@ -1,6 +1,7 @@
 package store
 
 import (
+	"encoding/binary"
 	"io"
 	"os"
 	"sync"
@@ -19,11 +20,17 @@ import (
 const offsetMapEntrySize uint64 = 16
 
 type FileQueue struct {
-	mu        sync.RWMutex
-	dataFile  *os.File
-	offset    uint64
-	offsetMap map[uint64][2]uint64
+	mu sync.RWMutex
+	// offset is the next offset to be written
+	offset uint64
+	// dataFile is the file where the data is stored
+	dataFile *os.File
+	// indexFile is the file where the index is stored
 	indexFile *os.File
+	// cache is a cache map of (offset, data_size)
+	// TODO: Implement an expiration policy thing
+	// TODO: Note used yet, implement it in read and write
+	cache map[uint64][]byte
 }
 
 // NewFileQueue creates a new file queue.
@@ -49,11 +56,11 @@ func NewFileQueue(folderPath string) *FileQueue {
 		panic(err)
 	}
 
-	// TODO: Initialize the offsetMap
 	s := &FileQueue{
+		mu:        sync.RWMutex{},
 		dataFile:  dataFile,
 		indexFile: indexFile,
-		mu:        sync.RWMutex{},
+		cache:     make(map[uint64][]byte),
 	}
 
 	s.offset, err = s.getOffsetAtStartup()
@@ -64,21 +71,113 @@ func NewFileQueue(folderPath string) *FileQueue {
 	return s
 }
 
-// TODO
 func (s *FileQueue) Write(reader io.Reader) (offset uint64, err error) {
-	return 0, nil
+	s.mu.Lock()
+	defer s.mu.Unlock()
+
+	o, err := s.writeItem(reader)
+	if err != nil {
+		return 0, err
+	}
+
+	s.offset++
+	return o, nil
 }
 
-// TODO
 func (s *FileQueue) Read(offset uint64, writer io.Writer) error {
-	return nil
-}
-
-// getOffsetAtStartup returns the offset at startup atomically
-func (s *FileQueue) getOffsetAtStartup() (uint64, error) {
 	s.mu.RLock()
 	defer s.mu.RUnlock()
 
+	// TODO: Implement cache and get it from here if exists
+
+	return s.getItem(offset, writer)
+}
+
+// getItem reads from the index file the offset and size of the data
+// and then reads the data from the data file.
+// It writes the data to the given writer.
+// Note: It does not lock the mutex, it is the caller responsibility.
+func (s *FileQueue) getItem(offset uint64, w io.Writer) error {
+	// Read the offset and size
+	var (
+		dataOffset uint64
+		dataSize   uint64
+		err        error
+	)
+
+	// Get data position and size from the index file
+	dataPos := offset * offsetMapEntrySize
+	_, err = s.indexFile.Seek(int64(dataPos), 0)
+	if err != nil {
+		return err
+	}
+
+	err = binary.Read(s.indexFile, binary.BigEndian, &dataOffset)
+	if err != nil {
+		return err
+	}
+
+	err = binary.Read(s.indexFile, binary.BigEndian, &dataSize)
+	if err != nil {
+		return err
+	}
+
+	// Get the data from the data file
+	data := make([]byte, dataSize)
+	_, err = s.dataFile.Seek(int64(dataOffset), 0)
+	if err != nil {
+		return err
+	}
+
+	_, err = s.dataFile.Read(data)
+	if err != nil {
+		return err
+	}
+
+	n, err := io.CopyN(w, s.dataFile, int64(dataSize))
+	if err != nil {
+		return err
+	}
+	if n != int64(dataSize) {
+		return io.ErrShortWrite
+	}
+
+	return nil
+}
+
+// writeItem writes the data to the data file and the offset and size to the index file.
+// It returns the offset of the data in the index file.
+// Note: It does not lock the mutex, it is the caller responsibility.
+func (s *FileQueue) writeItem(r io.Reader) (offset uint64, err error) {
+	// TODO: This can be done way better, like storing it in memory and update it accordingly at each write
+	// Get current data file offset through size of the data file
+	stat, err := s.dataFile.Stat()
+	if err != nil {
+		return 0, err
+	}
+	dataOffset := uint64(stat.Size())
+
+	// Write data to the data file
+	dataSize, err := io.Copy(s.dataFile, r)
+	if err != nil {
+		return 0, err
+	}
+
+	// Write data offset and size to the index file
+	err = binary.Write(s.indexFile, binary.BigEndian, dataOffset)
+	if err != nil {
+		return 0, err
+	}
+	err = binary.Write(s.indexFile, binary.BigEndian, uint64(dataSize))
+	if err != nil {
+		return 0, err
+	}
+
+	return s.offset, nil
+}
+
+// getOffsetAtStartup returns the offset at startup
+func (s *FileQueue) getOffsetAtStartup() (uint64, error) {
 	// Get indexFile size
 	stat, err := s.indexFile.Stat()
 	if err != nil {
