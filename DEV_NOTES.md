@@ -74,3 +74,7 @@
 
 - DONE: Fix EOF error when using fqueue store on subscribe (it gets returned as last element of subscribe topic), troubleshoot why it happens
 - TODO: When using fqueue store, I need to restore the existing topics, otherwise weird stuff happens when pushing to a topic name that was already used
+
+## 2023-01-13
+
+- I've decided to don't implement any cache for now in the fqueue store, thinking about it I have the broker that is already providing all the subscriber with the current written message. For most use cases previously written messages are not needed as frequently or at least not in the immediate future once writter so it doesn't make sense to keep them in memory. I would change my mind if needed later.

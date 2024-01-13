@@ -30,10 +30,6 @@ type FileQueue struct {
 	dataFile *os.File
 	// indexFile is the file where the index is stored
 	indexFile *os.File
-	// cache is a cache map of (offset, data_size)
-	// TODO: Implement an expiration policy thing
-	// TODO: Note used yet, implement it in read and write
-	cache map[uint64][]byte
 }
 
 // NewFileQueue creates a new file queue.
@@ -63,7 +59,6 @@ func NewFileQueue(folderPath string) *FileQueue {
 		mu:        sync.RWMutex{},
 		dataFile:  dataFile,
 		indexFile: indexFile,
-		cache:     make(map[uint64][]byte),
 	}
 
 	s.offset, err = s.getOffsetAtStartup()
@@ -95,8 +90,6 @@ func (s *FileQueue) Read(offset uint64, writer io.Writer) error {
 	if offset >= s.offset {
 		return common.OffsetNotFoundError{Err: fmt.Errorf("offset %d not found", offset)}
 	}
-
-	// TODO: Implement cache and get it from here if exists
 
 	return s.getItem(offset, writer)
 }
