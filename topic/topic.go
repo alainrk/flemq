@@ -9,6 +9,11 @@ import (
 	"github.com/alainrk/flemq/store"
 )
 
+const (
+	usePersistence     = true
+	defaultStoreFolder = "/tmp/flemq"
+)
+
 type Topic interface {
 	Write(reader io.Reader) (offset uint64, err error)
 	Read(offset uint64, writer io.Writer) error
@@ -29,14 +34,21 @@ type DefaultTopic struct {
 // New creates a new topic with the given name.
 // It also start a broker for the topic.
 func New(name string) DefaultTopic {
+	var s store.QueueStore
+
 	broker := broker.New[[]byte](name, false)
 	go broker.Start()
+
+	if usePersistence {
+		s = store.NewFileQueue(fmt.Sprintf("%s/%s", defaultStoreFolder, name))
+	} else {
+		s = store.NewMemoryQueue()
+	}
+
 	return DefaultTopic{
 		Name:   name,
 		broker: broker,
-		// store:  store.NewMemoryQueue(),
-		// TODO: Make this configurable and use a proper naming for topics
-		store: store.NewFileQueue(fmt.Sprintf("/tmp/flemq/%s", name)),
+		store:  s,
 	}
 }
 

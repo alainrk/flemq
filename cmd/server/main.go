@@ -52,7 +52,7 @@ func main() {
 
 	// If killed by SIGTERM
 	handleSignals(closer)
-	// If died natually
+	// If died naturally
 	defer closer()
 
 	server.Run()

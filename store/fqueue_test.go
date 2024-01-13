@@ -8,10 +8,6 @@ import (
 	"testing"
 )
 
-// Write(reader io.Reader) (offset uint64, err error)
-// Read(offset uint64, writer io.Writer) error
-// Close() error
-
 func TestNewFileQueue(t *testing.T) {
 	var err error
 
@@ -104,7 +100,6 @@ func TestFileQueue(t *testing.T) {
 	}
 }
 
-// TODO: Test persistence of data at restart
 func TestFileQueuePersistence(t *testing.T) {
 	var (
 		err    error

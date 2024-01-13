@@ -26,6 +26,8 @@ type FileQueue struct {
 	mu sync.RWMutex
 	// offset is the next offset to be written
 	offset uint64
+	// folderPath is the root folder where the data and index files are stored
+	folderPath string
 	// dataFile is the file where the data is stored
 	dataFile *os.File
 	// indexFile is the file where the index is stored
@@ -45,20 +47,21 @@ func NewFileQueue(folderPath string) *FileQueue {
 		indexFilePath = folderPath + "/index"
 	)
 
-	dataFile, err := os.OpenFile(dataFilePath, os.O_RDWR|os.O_CREATE, 0644)
+	dataFile, err := os.OpenFile(dataFilePath, os.O_RDWR|os.O_APPEND|os.O_CREATE, 0644)
 	if err != nil {
 		panic(err)
 	}
 
-	indexFile, err := os.OpenFile(indexFilePath, os.O_RDWR|os.O_CREATE, 0644)
+	indexFile, err := os.OpenFile(indexFilePath, os.O_RDWR|os.O_APPEND|os.O_CREATE, 0644)
 	if err != nil {
 		panic(err)
 	}
 
 	s := &FileQueue{
-		mu:        sync.RWMutex{},
-		dataFile:  dataFile,
-		indexFile: indexFile,
+		mu:         sync.RWMutex{},
+		folderPath: folderPath,
+		dataFile:   dataFile,
+		indexFile:  indexFile,
 	}
 
 	s.offset, err = s.getOffsetAtStartup()
@@ -69,6 +72,7 @@ func NewFileQueue(folderPath string) *FileQueue {
 	return s
 }
 
+// Write writes the data from the reader into the queue.
 func (s *FileQueue) Write(reader io.Reader) (offset uint64, err error) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
@@ -82,6 +86,7 @@ func (s *FileQueue) Write(reader io.Reader) (offset uint64, err error) {
 	return o, nil
 }
 
+// Read reads the data at the given offset into the writer.
 func (s *FileQueue) Read(offset uint64, writer io.Writer) error {
 	s.mu.RLock()
 	defer s.mu.RUnlock()
@@ -94,6 +99,7 @@ func (s *FileQueue) Read(offset uint64, writer io.Writer) error {
 	return s.getItem(offset, writer)
 }
 
+// Close closes the queue files.
 func (s *FileQueue) Close() error {
 	s.mu.Lock()
 	defer s.mu.Unlock()
@@ -109,6 +115,23 @@ func (s *FileQueue) Close() error {
 	}
 
 	return nil
+}
+
+// List returns the list of available topics already stored.
+// It is useful to restore the state of the topics at startup.
+func (s *FileQueue) List() []string {
+	l := []string{}
+	// List all the topic folders and return them
+	entries, err := os.ReadDir(s.folderPath)
+	if err != nil {
+		return l
+	}
+	for _, entry := range entries {
+		if entry.IsDir() {
+			l = append(l, entry.Name())
+		}
+	}
+	return l
 }
 
 // getItem reads from the index file the offset and size of the data

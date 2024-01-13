@@ -15,12 +15,14 @@ type MemoryQueue struct {
 	data    map[uint64][]byte
 }
 
+// NewMemoryQueue creates a new memory queue.
 func NewMemoryQueue() *MemoryQueue {
 	return &MemoryQueue{
 		data: make(map[uint64][]byte),
 	}
 }
 
+// Write writes the data from the reader into the queue.
 func (s *MemoryQueue) Write(reader io.Reader) (offset uint64, err error) {
 	buf, err := io.ReadAll(reader)
 	if err != nil {
@@ -37,6 +39,7 @@ func (s *MemoryQueue) Write(reader io.Reader) (offset uint64, err error) {
 	return s.counter - 1, nil
 }
 
+// Read reads the data at the given offset into the writer.
 func (s *MemoryQueue) Read(offset uint64, writer io.Writer) error {
 	s.mu.RLock()
 	defer s.mu.RUnlock()
@@ -49,6 +52,13 @@ func (s *MemoryQueue) Read(offset uint64, writer io.Writer) error {
 	return err
 }
 
+// Close closes the queue.
 func (s *MemoryQueue) Close() error {
 	return nil
+}
+
+// List returns a list of topics.
+// In the case of MemoryQueue, it returns an empty list as there is no persistence.
+func (s *MemoryQueue) List() []string {
+	return []string{}
 }
