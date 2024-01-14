@@ -2,16 +2,16 @@ package topic
 
 import (
 	"bytes"
-	"fmt"
 	"io"
+	"os"
+	"path/filepath"
 
 	"github.com/alainrk/flemq/broker"
 	"github.com/alainrk/flemq/store"
 )
 
 const (
-	usePersistence     = true
-	defaultStoreFolder = "/tmp/flemq"
+	usePersistence = true
 )
 
 type Topic interface {
@@ -20,6 +20,33 @@ type Topic interface {
 	Subscribe() chan []byte
 	Unsubscribe() chan []byte
 	Close() error
+}
+
+// RestoreDefaultTopics is static function that returns a map of existing topics, if possible (persistent store).
+func RestoreDefaultTopics(folder string) map[string]DefaultTopic {
+	topics := make(map[string]DefaultTopic)
+
+	if !usePersistence {
+		return topics
+	}
+
+	// TODO: All this stuff should really not be here.
+	// It should belong to the persistence layer.
+	entries, err := os.ReadDir(folder)
+	if err != nil {
+		// We're good, it means the folder does not exist yet and this is the first run.
+		if os.IsNotExist(err) {
+			return topics
+		}
+		panic(err)
+	}
+	for _, entry := range entries {
+		if entry.IsDir() {
+			topics[entry.Name()] = New(entry.Name(), folder)
+		}
+	}
+
+	return topics
 }
 
 // DefaultTopic implements the Topic interface.
@@ -33,14 +60,16 @@ type DefaultTopic struct {
 
 // New creates a new topic with the given name.
 // It also start a broker for the topic.
-func New(name string) DefaultTopic {
+func New(name string, folder string) DefaultTopic {
 	var s store.QueueStore
 
 	broker := broker.New[[]byte](name, false)
 	go broker.Start()
 
+	topicFolder := filepath.Join(folder, name)
+
 	if usePersistence {
-		s = store.NewFileQueue(fmt.Sprintf("%s/%s", defaultStoreFolder, name))
+		s = store.NewFileQueue(topicFolder)
 	} else {
 		s = store.NewMemoryQueue()
 	}

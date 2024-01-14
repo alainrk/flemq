@@ -8,19 +8,22 @@ import (
 	"strconv"
 
 	"github.com/alainrk/flemq/common"
+	"github.com/alainrk/flemq/config"
 	"github.com/alainrk/flemq/flep"
 	"github.com/alainrk/flemq/topic"
 )
 
-type Topics map[string]topic.DefaultTopic
-
 type Handlers struct {
-	topics Topics
+	config config.Config
+	topics map[string]topic.DefaultTopic
 }
 
-func NewHandlers() Handlers {
+func NewHandlers(c config.Config) Handlers {
+	t := topic.RestoreDefaultTopics(c.Store.Folder)
+
 	return Handlers{
-		topics: make(Topics),
+		config: c,
+		topics: t,
 	}
 }
 
@@ -40,7 +43,7 @@ func (h *Handlers) HandlePush(req flep.Request) (uint64, error) {
 
 	// XXX: Auto-creates topic if it doesn't exist for now.
 	if _, ok := h.topics[tn]; !ok {
-		h.topics[tn] = topic.New(tn)
+		h.topics[tn] = topic.New(tn, h.config.Store.Folder)
 	}
 
 	topic := h.topics[tn]

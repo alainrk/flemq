@@ -117,23 +117,6 @@ func (s *FileQueue) Close() error {
 	return nil
 }
 
-// List returns the list of available topics already stored.
-// It is useful to restore the state of the topics at startup.
-func (s *FileQueue) List() []string {
-	l := []string{}
-	// List all the topic folders and return them
-	entries, err := os.ReadDir(s.folderPath)
-	if err != nil {
-		return l
-	}
-	for _, entry := range entries {
-		if entry.IsDir() {
-			l = append(l, entry.Name())
-		}
-	}
-	return l
-}
-
 // getItem reads from the index file the offset and size of the data
 // and then reads the data from the data file.
 // It writes the data to the given writer.

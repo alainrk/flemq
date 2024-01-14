@@ -56,9 +56,3 @@ func (s *MemoryQueue) Read(offset uint64, writer io.Writer) error {
 func (s *MemoryQueue) Close() error {
 	return nil
 }
-
-// List returns a list of topics.
-// In the case of MemoryQueue, it returns an empty list as there is no persistence.
-func (s *MemoryQueue) List() []string {
-	return []string{}
-}

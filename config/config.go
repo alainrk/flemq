@@ -10,8 +10,14 @@ import (
 const ENV_PREFIX = "FLEMQ_"
 
 type Config struct {
-	Addr string `default:":22123"`
-	TLS  struct {
+	Addr  string `default:":22123"`
+	Store struct {
+		// Type of store to use, available: [mqueue, fqueue]
+		Type string `default:"fqueue"`
+		// Only used for file store
+		Folder string `default:"/tmp/flemq"`
+	}
+	TLS struct {
 		Enabled  bool `default:"false"`
 		CertFile string
 		KeyFile  string
@@ -27,6 +33,9 @@ func NewConfig() Config {
 	var config Config
 
 	config.Addr = loadEnv(ENV_PREFIX, "ADDR", ":22123").(string)
+
+	config.Store.Type = loadEnv(ENV_PREFIX, "STORE_TYPE", "fqueue").(string)
+	config.Store.Folder = loadEnv(ENV_PREFIX, "STORE_FOLDER", "/tmp/flemq").(string)
 
 	config.TLS.Enabled = loadEnv(ENV_PREFIX, "TLS_ENABLED", false).(bool)
 	config.TLS.CertFile = loadEnv(ENV_PREFIX, "TLS_CERT_FILE", "not_set").(string)
