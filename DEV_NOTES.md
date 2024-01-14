@@ -79,3 +79,8 @@
 
 - I've decided to don't implement any cache for now in the fqueue store, thinking about it I have the broker that is already providing all the subscriber with the current written message. For most use cases previously written messages are not needed as frequently or at least not in the immediate future once writter so it doesn't make sense to keep them in memory. I would change my mind if needed later.
 - TODO: (fqueue persistence) I've partially fixed the re-open issue, but it only works if at least someone pushes before subscribing/picking as the broker isn't initialized yet in the topic (this because only happens implicitly at the first write (New() call)), so the broker must start at the startup or at each read I have to check if the topic exists, otherwise create it.
+
+## 2023-01-14
+
+- I do really need to improve some config passing around, so I'll add the store setting and passing it down to the topic level to set persistence and enable testing
+- I'll also implement the above topic restore as it's not possible to read before writing when fqueue is used otherwise
