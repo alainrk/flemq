@@ -7,24 +7,36 @@ import (
 	"time"
 )
 
+type StoreType string
+
 const ENV_PREFIX = "FLEMQ_"
+const (
+	StoreTypeFqueue StoreType = "fqueue"
+	StoreTypeMqueue StoreType = "mqueue"
+)
 
 type Config struct {
-	Addr  string `default:":22123"`
-	Store struct {
-		// Type of store to use, available: [mqueue, fqueue]
-		Type string `default:"fqueue"`
-		// Only used for file store
-		Folder string `default:"/tmp/flemq"`
-	}
-	TLS struct {
-		Enabled  bool `default:"false"`
-		CertFile string
-		KeyFile  string
-	}
-	Connection struct {
-		RWTimeout time.Duration `default:"60s"`
-	}
+	Addr       string `default:":22123"`
+	Store      StoreConfig
+	TLS        TLSConfig
+	Connection ConnectionConfig
+}
+
+type StoreConfig struct {
+	// Type of store to use, available: [mqueue, fqueue]
+	Type StoreType `default:"fqueue"`
+	// Only used for file store
+	Folder string `default:"/tmp/flemq"`
+}
+
+type TLSConfig struct {
+	Enabled  bool `default:"false"`
+	CertFile string
+	KeyFile  string
+}
+
+type ConnectionConfig struct {
+	RWTimeout time.Duration `default:"60s"`
 }
 
 // NewConfig returns a new Config struct with default values
@@ -34,7 +46,8 @@ func NewConfig() Config {
 
 	config.Addr = loadEnv(ENV_PREFIX, "ADDR", ":22123").(string)
 
-	config.Store.Type = loadEnv(ENV_PREFIX, "STORE_TYPE", "fqueue").(string)
+	st := loadEnv(ENV_PREFIX, "STORE_TYPE", "fqueue").(string)
+	config.Store.Type = StoreType(st)
 	config.Store.Folder = loadEnv(ENV_PREFIX, "STORE_FOLDER", "/tmp/flemq").(string)
 
 	config.TLS.Enabled = loadEnv(ENV_PREFIX, "TLS_ENABLED", false).(bool)

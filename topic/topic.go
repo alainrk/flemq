@@ -7,11 +7,8 @@ import (
 	"path/filepath"
 
 	"github.com/alainrk/flemq/broker"
+	"github.com/alainrk/flemq/config"
 	"github.com/alainrk/flemq/store"
-)
-
-const (
-	usePersistence = true
 )
 
 type Topic interface {
@@ -23,16 +20,16 @@ type Topic interface {
 }
 
 // RestoreDefaultTopics is static function that returns a map of existing topics, if possible (persistent store).
-func RestoreDefaultTopics(folder string) map[string]DefaultTopic {
+func RestoreDefaultTopics(c config.StoreConfig) map[string]DefaultTopic {
 	topics := make(map[string]DefaultTopic)
 
-	if !usePersistence {
+	if c.Type == config.StoreTypeMqueue {
 		return topics
 	}
 
 	// TODO: All this stuff should really not be here.
 	// It should belong to the persistence layer.
-	entries, err := os.ReadDir(folder)
+	entries, err := os.ReadDir(c.Folder)
 	if err != nil {
 		// We're good, it means the folder does not exist yet and this is the first run.
 		if os.IsNotExist(err) {
@@ -42,7 +39,7 @@ func RestoreDefaultTopics(folder string) map[string]DefaultTopic {
 	}
 	for _, entry := range entries {
 		if entry.IsDir() {
-			topics[entry.Name()] = New(entry.Name(), folder)
+			topics[entry.Name()] = New(entry.Name(), c)
 		}
 	}
 
@@ -60,15 +57,14 @@ type DefaultTopic struct {
 
 // New creates a new topic with the given name.
 // It also start a broker for the topic.
-func New(name string, folder string) DefaultTopic {
+func New(name string, c config.StoreConfig) DefaultTopic {
 	var s store.QueueStore
 
 	broker := broker.New[[]byte](name, false)
 	go broker.Start()
 
-	topicFolder := filepath.Join(folder, name)
-
-	if usePersistence {
+	if c.Type == config.StoreTypeFqueue {
+		topicFolder := filepath.Join(c.Folder, name)
 		s = store.NewFileQueue(topicFolder)
 	} else {
 		s = store.NewMemoryQueue()
