@@ -6,6 +6,8 @@ import (
 	"math/rand"
 	"os"
 	"testing"
+
+	"github.com/alainrk/flemq/common"
 )
 
 func TestNewFileQueue(t *testing.T) {
@@ -148,4 +150,20 @@ func TestFileQueuePersistence(t *testing.T) {
 	}
 }
 
-// TODO: Test for non existing offset
+func TestFileQueueMissingOffset(t *testing.T) {
+	testFolder := fmt.Sprintf("/tmp/flemq_test_%d", rand.Int())
+	defer os.RemoveAll(testFolder)
+	s := NewFileQueue(testFolder)
+
+	s.Write(bytes.NewReader([]byte("000")))
+	s.Write(bytes.NewReader([]byte("111")))
+	s.Write(bytes.NewReader([]byte("222")))
+
+	err := s.Read(3, &bytes.Buffer{})
+	if err == nil {
+		t.Fatalf("Expected error, got nil")
+		if _, ok := err.(common.OffsetNotFoundError); ok {
+			t.Fatalf("Expected error of type OffsetNotFoundError, got %T", err)
+		}
+	}
+}

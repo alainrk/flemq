@@ -126,4 +126,17 @@ func TestMemoryQueueWrite(t *testing.T) {
 	}
 }
 
-// TODO: Test for non existent offset
+func TestMemoryQueueMissingOffset(t *testing.T) {
+	s := NewMemoryQueue()
+	s.Write(bytes.NewReader([]byte("000")))
+	s.Write(bytes.NewReader([]byte("111")))
+	s.Write(bytes.NewReader([]byte("222")))
+
+	err := s.Read(3, &bytes.Buffer{})
+	if err == nil {
+		t.Fatalf("Expected error, got nil")
+		if _, ok := err.(common.OffsetNotFoundError); ok {
+			t.Fatalf("Expected error of type OffsetNotFoundError, got %T", err)
+		}
+	}
+}
