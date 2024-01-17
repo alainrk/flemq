@@ -83,10 +83,14 @@ func (h *Handlers) HandlePick(req flep.Request) ([]byte, error) {
 // It should:
 //   - Send all the messages from the offset to the existing offset.
 //   - Listen for new messages and send them as they come in (channel/polling on the map/other...)
-func (h *Handlers) HandleSubscribe(conn net.Conn, req flep.Request) error {
+func (h *Handlers) HandleSubscribe(conn net.Conn, req flep.Request, done chan bool) {
+	defer func() {
+		done <- true
+	}()
+
 	startingOffset, err := strconv.Atoi(string(req.Args[1]))
 	if err != nil {
-		return err
+		log.Printf("Error during subscription: %v", err)
 	}
 
 	tn := string(req.Args[0])
@@ -94,7 +98,8 @@ func (h *Handlers) HandleSubscribe(conn net.Conn, req flep.Request) error {
 	// Topic must exist.
 	topic, ok := h.topics[tn]
 	if !ok {
-		return fmt.Errorf("topic %s does not exist", tn)
+		log.Printf("topic %s does not exist", tn)
+		return
 	}
 
 	var buf bytes.Buffer
@@ -106,12 +111,12 @@ func (h *Handlers) HandleSubscribe(conn net.Conn, req flep.Request) error {
 			if _, ok := err.(common.OffsetNotFoundError); ok {
 				break
 			}
-			return err
+			log.Printf("Error during subscription: %v", err)
+			return
 		}
 
 		// Send previously received message
 		fmt.Printf("Sending previous offset %d: %s\n", offset, buf.Bytes())
-		// TODO: Decide how to handle the stream, should we just send everything as as it come or prepend the length? Or maybe use a EOF marker?
 		fr := flep.SimpleBytesResponse(buf.Bytes())
 		conn.Write(fr)
 		offset++
@@ -120,11 +125,7 @@ func (h *Handlers) HandleSubscribe(conn net.Conn, req flep.Request) error {
 	// Send any other incoming message coming from the topic's broker.
 	s := topic.Subscribe()
 	for msg := range s {
-		// TODO: Decide how to handle the stream, should we just send everything as as it come or prepend the length? Or maybe use a EOF marker?
 		fr := flep.SimpleBytesResponse(msg)
 		conn.Write(fr)
 	}
-
-	// Should never get here.
-	return nil
 }

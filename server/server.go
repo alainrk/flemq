@@ -115,12 +115,12 @@ repl:
 		req, err := c.FLEPReader.ReadRequest()
 		if err != nil {
 			if errors.As(err, &flep.FlepError{}) {
-				log.Println("Error:", err)
+				log.Println("Flep Error:", err)
 				fr := flep.SimpleErrorResponse(err.Error())
 				c.Connection.Write(fr)
 				continue
 			}
-			log.Println("Error:", err)
+			log.Println("Connection Error:", err)
 			break repl
 		}
 
@@ -152,19 +152,36 @@ repl:
 			// Long running command, so we reset the deadline
 			// and leave this connection open to be handled.
 			c.Connection.SetDeadline(time.Time{})
-			err := s.handlers.HandleSubscribe(c.Connection, req)
-			if err != nil {
-				log.Println("Error:", err)
-				fr := flep.SimpleErrorResponse(err.Error())
-				c.Connection.Write(fr)
-				continue
-			}
+
+			done := make(chan bool)
+
+			go s.handlers.HandleSubscribe(c.Connection, req, done)
+			go waitDisconnect(c.Connection, done)
+
+			// Wait for any of the two to be done/close/error out.
+			<-done
+
+			exit(c.Connection)
+			break repl
 
 		case flep.CommandExit:
-			log.Println("Client exiting:", c.Connection.RemoteAddr())
-			fr := flep.SimpleStringResponse("OK")
-			c.Connection.Write(fr)
+			exit(c.Connection)
 			break repl
 		}
 	}
+}
+
+func waitDisconnect(c net.Conn, done chan bool) {
+	_, err := c.Read([]byte{0})
+	// TODO: Improvable checking for errors?
+	// For subscribers specifically I don't care as I just need to close as soon as there's any error.
+	if err != nil {
+		done <- true
+	}
+}
+
+func exit(c net.Conn) {
+	log.Println("Client exiting:", c.RemoteAddr())
+	fr := flep.SimpleStringResponse("OK")
+	c.Write(fr)
 }

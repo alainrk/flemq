@@ -68,7 +68,7 @@
 
 ## 2023-01-05
 
-- TODO: Handle connection termination (e.g. client disconnects) during subscription handler (timeout is disabled in this case)
+- DONE: Handle connection termination (e.g. client disconnects) during subscription handler (timeout is disabled in this case)
 
 ## 2023-01-11
 
