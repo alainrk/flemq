@@ -2,16 +2,20 @@
 
 **Flexible Message Queue**
 
-![Example](https://github.com/alainrk/flemq/raw/main/assets/logo.png)
+![Example](https://github.com/alainrk/flemq/raw/main/assets/logo.png | width=100)
 
 ## Dev
 
 ```sh
-# Generate TLS certificate/key for local testing
-# It has SAN to localhost in the config (see cert.conf)
+# Generate TLS certificate/key for local testing (if you want to use TLS)
+# You have to set SAN to localhost in the config (see cert.conf)
 make cert
 
 # Run the server in live reload
+make dev
+
+# Build and Run the server
+make build
 make run
 
 # Send messages to the server (plaintext - tcp)
