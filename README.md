@@ -2,7 +2,7 @@
 
 **Flexible Message Queue**
 
-![Example](https://github.com/alainrk/flemq/raw/main/assets/flemq.gif)
+![Example](https://github.com/alainrk/flemq/raw/main/assets/logo.png)
 
 ## Dev
 
@@ -23,9 +23,27 @@ go run example/producer-tls/*
 
 ## Quick and dirty usage
 
+It uses a redis-like protocol, completely text based, so you can use netcat to test it.
+
 ```sh
 nc localhost 22123
-> PUSH topic1 message1
-> PICK topic1 0
-> EXIT
+
+> push topic_x message
+:0
+
+> push topic_x message_2
+:1
+
+> pick topic_y 0
+-topic topic_y does not exist
+
+> pick topic_x 1
++message_2
+
+> subscribe topic_x
++message
++message_2
+...
 ```
+
+![Example](https://github.com/alainrk/flemq/raw/main/assets/flemq.gif)
