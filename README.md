@@ -2,7 +2,7 @@
 
 **Flexible Message Queue**
 
-![Example](https://github.com/alainrk/flemq/raw/main/assets/logo.png | width=100)
+<img src='assets/logo.png' width='100'>
 
 ## Dev
 
