@@ -6,7 +6,8 @@
   "scripts": {
     "test": "npm test",
     "build": "tsc",
-    "start": "node dist/index.js"
+    "start": "npm run build && node dist/index.js",
+    "dev": "nodemon --watch 'src/**/*.ts' --exec 'ts-node' src/index.ts"
   },
   "repository": {
     "type": "git",
@@ -19,6 +20,8 @@
   "license": "ISC",
   "devDependencies": {
     "@types/node": "^20.11.5",
+    "nodemon": "^3.0.3",
+    "ts-node": "^10.9.2",
     "typescript": "^5.3.3"
   }
 }
