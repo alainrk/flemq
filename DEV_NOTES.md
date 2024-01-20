@@ -84,3 +84,8 @@
 
 - I do really need to improve some config passing around, so I'll add the store setting and passing it down to the topic level to set persistence and enable testing
 - I'll also implement the above topic restore as it's not possible to read before writing when fqueue is used otherwise
+
+## 2023-01-20
+
+- Implementing TS SDK for fun
+- TODO: Add logrus, also I need the debug level for some stuff (e.g. FLEP protocol errors)

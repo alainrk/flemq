@@ -1,8 +1,11 @@
 import * as net from "net";
 
+type FlemQSerDer = "base64";
+
 type FlemQClientOptions = {
   host?: string;
   port: number;
+  serder: FlemQSerDer;
 };
 
 class FlemQ {
@@ -21,7 +24,6 @@ class FlemQ {
         this.options.port,
         this.options.host || "localhost",
         () => {
-          console.log("Connection established");
           resolve(this);
         }
       );
@@ -38,18 +40,24 @@ class FlemQ {
       this.client.write(data, (err) => {
         if (err) {
           reject(err);
-        } else {
-          resolve("");
         }
       });
 
       this.client.on("data", (data) => {
         resolve(data.toString());
       });
+
+      this.client.on("error", (err) => {
+        reject(err);
+      });
     });
   }
 
   async push(topic: string, data: string): Promise<string> {
+    if (this.options.serder === "base64") {
+      data = btoa(data);
+    }
+
     return this.send(`PUSH ${topic} ${data}`);
   }
 }
@@ -57,6 +65,7 @@ class FlemQ {
 (async () => {
   const flemq = new FlemQ({
     port: 22123,
+    serder: "base64",
   });
 
   await flemq.connect();
