@@ -20,7 +20,7 @@
 # Go workspace file
 go.work
 
-# --- Project specific ---
 bin
 cert
 .env
+node_modules
