@@ -124,6 +124,9 @@ repl:
 			break repl
 		}
 
+		// TODO: Remove or set log debug level.
+		log.Printf("Handling request: %s", req)
+
 		switch req.Command {
 
 		case flep.CommandPush:

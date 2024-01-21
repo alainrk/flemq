@@ -1,67 +1,12 @@
-import * as net from "net";
+import { FlemQ } from "../src/flemq";
 
-type FlemQSerDer = "base64";
-
-type FlemQClientOptions = {
-  host?: string;
-  port: number;
-  serder: FlemQSerDer;
+const sleep = async (msec: number) => {
+  return new Promise((resolve) => {
+    setTimeout(resolve, msec);
+  });
 };
 
-class FlemQ {
-  private client: net.Socket;
-  private options: FlemQClientOptions;
-
-  constructor(opt: FlemQClientOptions) {
-    this.client = new net.Socket();
-    this.options = opt;
-  }
-
-  // connect client to server
-  async connect(): Promise<FlemQ> {
-    return new Promise((resolve, reject) => {
-      this.client.connect(
-        this.options.port,
-        this.options.host || "localhost",
-        () => {
-          resolve(this);
-        }
-      );
-
-      this.client.on("error", (err) => {
-        reject(err);
-      });
-    });
-  }
-
-  // send data to server
-  private async send(data: string): Promise<string> {
-    return new Promise((resolve, reject) => {
-      this.client.write(data, (err) => {
-        if (err) {
-          reject(err);
-        }
-      });
-
-      this.client.on("data", (data) => {
-        resolve(data.toString());
-      });
-
-      this.client.on("error", (err) => {
-        reject(err);
-      });
-    });
-  }
-
-  async push(topic: string, data: string): Promise<string> {
-    if (this.options.serder === "base64") {
-      data = btoa(data);
-    }
-
-    return this.send(`PUSH ${topic} ${data}`);
-  }
-}
-
+// Publisher
 (async () => {
   const flemq = new FlemQ({
     port: 22123,
@@ -69,5 +14,23 @@ class FlemQ {
   });
 
   await flemq.connect();
-  await flemq.push("x", "hello world");
+  for (let i = 0; i < 100; i++) {
+    console.log(`Sending ${i}`);
+    const res = await flemq.push("ts_tests", `Hello from TS ${i}`);
+    console.log("Res:", res);
+    await sleep(500);
+  }
+})();
+
+// Subscriber
+(async () => {
+  const flemq = new FlemQ({
+    port: 22123,
+    serder: "base64",
+  });
+
+  await flemq.connect();
+  // await flemq.subscribe("x", (data) => {
+  //   console.log(data);
+  // });
 })();

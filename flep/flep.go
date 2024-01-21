@@ -22,6 +22,15 @@ type Request struct {
 	Args    [][]byte
 }
 
+func (r Request) String() string {
+	var b strings.Builder
+	for _, a := range r.Args {
+		b.WriteString(string(a))
+		b.WriteString(" ")
+	}
+	return fmt.Sprintf("%s %s", r.Command, b.String())
+}
+
 type Reader struct {
 	*bufio.Reader
 }
