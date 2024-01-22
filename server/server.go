@@ -124,6 +124,9 @@ repl:
 			break repl
 		}
 
+		// TODO: Remove or set log debug level.
+		log.Printf("Handling request: %s", req)
+
 		switch req.Command {
 
 		case flep.CommandPush:
@@ -136,6 +139,8 @@ repl:
 			}
 			fr := flep.IntResponse(int64(offset))
 			c.Connection.Write(fr)
+			// TODO: Remove or set log debug level.
+			log.Printf("Written response: %s", string(fr))
 
 		case flep.CommandPick:
 			res, err := s.handlers.HandlePick(req)
