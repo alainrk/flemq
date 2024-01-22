@@ -30,7 +30,4 @@ const sleep = async (msec: number) => {
   });
 
   await flemq.connect();
-  // await flemq.subscribe("x", (data) => {
-  //   console.log(data);
-  // });
 })();

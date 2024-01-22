@@ -21,7 +21,6 @@ export class FlemQ {
   constructor(opt: FlemQClientOptions) {
     this.client = new net.Socket();
     this.options = opt;
-    // Default handler
     // TODO: Handle concurrency, only one handler at a time and per client can be active (i.e. command await for a response)
     this.currentHandler = {
       resolver: (response: any) => {
@@ -49,6 +48,7 @@ export class FlemQ {
       );
 
       this.client.on("data", (data) => {
+        console.log("Received:", data.toString());
         this.handleResponse(data);
       });
 
@@ -66,19 +66,23 @@ export class FlemQ {
   public send(data: string): Promise<any> {
     return new Promise((resolve, reject) => {
       this.currentHandler = {
-        resolver: resolve,
+        resolver: resolve.bind(this),
         // TODO: Timeout to reject the promise (excl. subscribe)
-        rejecter: reject,
+        rejecter: reject.bind(this),
       };
-      this.client.write(data);
+      this.client.write(data, (error) => {
+        if (error) {
+          reject(error);
+        }
+      });
     });
   }
 
   async push(topic: string, data: string): Promise<string> {
     if (this.options.serder === "base64") {
-      data = btoa(data);
+      data = Buffer.from(data).toString("base64");
     }
 
-    return this.send(`PUSH ${topic} ${data}`);
+    return this.send(`PUSH ${topic} ${data}\r\n`);
   }
 }

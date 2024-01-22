@@ -7,8 +7,10 @@ export type FlemQClientOptions = {
 export declare class FlemQ {
     private client;
     private options;
+    private currentHandler;
     constructor(opt: FlemQClientOptions);
+    private handleResponse;
     connect(): Promise<FlemQ>;
-    private send;
+    send(data: string): Promise<any>;
     push(topic: string, data: string): Promise<string>;
 }

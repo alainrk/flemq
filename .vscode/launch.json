@@ -26,5 +26,12 @@
       "program": "${workspaceFolder}/example/main.go",
       "args": [""]
     },
+    {
+      "type": "node",
+      "request": "launch",
+      "name": "Launch Program",
+      "program": "${workspaceFolder}/example/ts/dist/index.js",
+      "outFiles": ["${workspaceFolder}/example/ts/dist/**/*.js"]
+    }
   ]
 }

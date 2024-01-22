@@ -9,13 +9,32 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-const flemq_1 = require("./flemq");
+const flemq_1 = require("../src/flemq");
+const sleep = (msec) => __awaiter(void 0, void 0, void 0, function* () {
+    return new Promise((resolve) => {
+        setTimeout(resolve, msec);
+    });
+});
+// Publisher
 (() => __awaiter(void 0, void 0, void 0, function* () {
     const flemq = new flemq_1.FlemQ({
         port: 22123,
         serder: "base64",
     });
     yield flemq.connect();
-    yield flemq.push("x", "hello world");
+    for (let i = 0; i < 100; i++) {
+        console.log(`Sending ${i}`);
+        const res = yield flemq.push("ts_tests", `Hello from TS ${i}`);
+        console.log("Res:", res);
+        yield sleep(500);
+    }
+}))();
+// Subscriber
+(() => __awaiter(void 0, void 0, void 0, function* () {
+    const flemq = new flemq_1.FlemQ({
+        port: 22123,
+        serder: "base64",
+    });
+    yield flemq.connect();
 }))();
 //# sourceMappingURL=index.js.map

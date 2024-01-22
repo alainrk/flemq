@@ -38,6 +38,19 @@ class FlemQ {
     constructor(opt) {
         this.client = new net.Socket();
         this.options = opt;
+        // Default handler
+        // TODO: Handle concurrency, only one handler at a time and per client can be active (i.e. command await for a response)
+        this.currentHandler = {
+            resolver: (response) => {
+                console.log(response);
+            },
+            rejecter: (error) => {
+                console.error(error);
+            },
+        };
+    }
+    handleResponse(data) {
+        this.currentHandler.resolver(data.toString());
     }
     // connect client to server
     connect() {
@@ -46,28 +59,28 @@ class FlemQ {
                 this.client.connect(this.options.port, this.options.host || "localhost", () => {
                     resolve(this);
                 });
-                this.client.on("error", (err) => {
-                    reject(err);
+                this.client.on("data", (data) => {
+                    console.log("Received:", data.toString());
+                    this.handleResponse(data);
+                });
+                this.client.on("close", () => {
+                    console.log("Connection closed");
+                });
+                this.client.on("error", (error) => {
+                    console.error("An error occurred:", error);
+                    reject(error);
                 });
             });
         });
     }
-    // send data to server
     send(data) {
-        return __awaiter(this, void 0, void 0, function* () {
-            return new Promise((resolve, reject) => {
-                this.client.write(data, (err) => {
-                    if (err) {
-                        reject(err);
-                    }
-                });
-                this.client.on("data", (data) => {
-                    resolve(data.toString());
-                });
-                this.client.on("error", (err) => {
-                    reject(err);
-                });
-            });
+        return new Promise((resolve, reject) => {
+            // this.currentHandler = {
+            //   resolver: resolve.bind(this),
+            //   // TODO: Timeout to reject the promise (excl. subscribe)
+            //   rejecter: reject.bind(this),
+            // };
+            this.client.write(data);
         });
     }
     push(topic, data) {
