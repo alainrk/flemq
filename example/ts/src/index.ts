@@ -17,8 +17,8 @@ const sleep = async (msec: number) => {
   for (let i = 0; i < 100; i++) {
     console.log(`Sending ${i}`);
     const res = await flemq.push("ts_tests", `Hello from TS ${i}`);
-    console.log("Res:", res);
-    await sleep(500);
+    console.log("Push Result:", res);
+    await sleep(1500);
   }
 })();
 
@@ -30,4 +30,5 @@ const sleep = async (msec: number) => {
   });
 
   await flemq.connect();
+  await flemq.subscribe("ts_tests");
 })();
