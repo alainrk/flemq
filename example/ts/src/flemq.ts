@@ -8,32 +8,36 @@ export type FlemQClientOptions = {
   serder: FlemQSerDer;
 };
 
-type Handler = {
-  resolver: (response: any) => void;
-  rejecter: (error: any) => void;
-};
+type Handler = (response: string) => void;
 
 export class FlemQ {
   private client: net.Socket;
   private options: FlemQClientOptions;
-  private currentHandler: Handler;
+  private handler: Handler | null = null;
 
   constructor(opt: FlemQClientOptions) {
     this.client = new net.Socket();
     this.options = opt;
-    // TODO: Handle concurrency, only one handler at a time and per client can be active (i.e. command await for a response)
-    this.currentHandler = {
-      resolver: (response: any) => {
-        console.log("Default resolve handler:", response);
-      },
-      rejecter: (error: any) => {
-        console.error("Default reject handler:", error);
-      },
-    };
   }
 
+  /**
+   * Handle the response from the server, checking if the handler is set
+   * @throws Error if handler is already set
+   */
   private handleResponse(data: any) {
-    this.currentHandler.resolver(data.toString());
+    if (this.handler == null) {
+      throw new Error("Handler not set");
+    }
+    this.handler(data.toString());
+  }
+
+  // TODO: Handle multiple commands waiting for a response at the same time (if needed)
+  private setHandler(handler: Handler) {
+    this.handler = handler;
+  }
+
+  private clearHandler() {
+    this.handler = null;
   }
 
   // connect client to server
@@ -80,11 +84,7 @@ export class FlemQ {
     data = this.serialize(data);
 
     return new Promise((resolve, reject) => {
-      this.currentHandler = {
-        resolver: resolve.bind(this),
-        // TODO: Timeout to reject the promise (excl. subscribe)
-        rejecter: reject.bind(this),
-      };
+      this.setHandler(resolve.bind(this));
       this.client.write(`PUSH ${topic} ${data}\r\n`, (error) => {
         if (error) {
           reject(error);
@@ -93,25 +93,21 @@ export class FlemQ {
     });
   }
 
-  handleSubscribeResponse(data: string) {
-    // Loop over lines
-    const lines = data.split("\r\n");
-    for (let line of lines) {
-      if (line.trim().length === 0) {
-        continue;
-      }
-      // Remove the first character (the type), and deserialize the data
-      console.log("Resolved:", this.deserialize(line.substring(1)));
-    }
-  }
-
   // TODO: This will get a handler that processes the data
-  async subscribe(topic: string, offset = 0): Promise<void> {
+  async subscribe(topic: string, handler: Handler, offset = 0): Promise<void> {
+    const handleSubscribeResponse = (data: string) => {
+      const lines = data.split("\r\n");
+      for (let line of lines) {
+        if (line.trim().length === 0) {
+          continue;
+        }
+        // Remove the first character (the type), and deserialize the data
+        handler(this.deserialize(line.substring(1)));
+      }
+    };
+
     return new Promise((resolve, reject) => {
-      this.currentHandler = {
-        resolver: this.handleSubscribeResponse.bind(this),
-        rejecter: reject.bind(this),
-      };
+      this.setHandler(handleSubscribeResponse.bind(this));
 
       this.client.write(`SUBSCRIBE ${topic} ${offset}\r\n`, (error) => {
         if (error) {
