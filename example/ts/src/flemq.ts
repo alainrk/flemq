@@ -93,7 +93,6 @@ export class FlemQ {
     });
   }
 
-  // TODO: This will get a handler that processes the data
   async subscribe(topic: string, handler: Handler, offset = 0): Promise<void> {
     const handleSubscribeResponse = (data: string) => {
       const lines = data.split("\r\n");

@@ -1,0 +1,20 @@
+TAP version 14
+# Subtest: asserting positive integers
+    1..5
+    ok 1 - (unnamed test)
+    ok 2 - (unnamed test)
+    ok 3 - (unnamed test)
+    ok 4 - (unnamed test)
+    ok 5 - (unnamed test)
+ok 1 - asserting positive integers # time=24.034ms
+
+# Subtest: asserting non-positive integers
+    1..5
+    ok 1 - (unnamed test)
+    ok 2 - (unnamed test)
+    ok 3 - (unnamed test)
+    ok 4 - (unnamed test)
+    ok 5 - (unnamed test)
+ok 2 - asserting non-positive integers # time=19.143ms
+
+1..2

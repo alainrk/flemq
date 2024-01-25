@@ -1,0 +1,72 @@
+{
+  "result": [
+    {
+      "scriptId": "983",
+      "url": "file:///Users/alain/code/flemq/example/ts/src/common.ts",
+      "functions": [
+        {
+          "functionName": "",
+          "ranges": [
+            {
+              "startOffset": 0,
+              "endOffset": 1566,
+              "count": 1
+            }
+          ],
+          "isBlockCoverage": true
+        },
+        {
+          "functionName": "assertPositiveInteger",
+          "ranges": [
+            {
+              "startOffset": 311,
+              "endOffset": 429,
+              "count": 10
+            },
+            {
+              "startOffset": 369,
+              "endOffset": 427,
+              "count": 5
+            }
+          ],
+          "isBlockCoverage": true
+        }
+      ]
+    }
+  ],
+  "timestamp": 651743.351656,
+  "source-map-cache": {
+    "file:///Users/alain/code/flemq/example/ts/src/common.ts": {
+      "lineLengths": [
+        13,
+        62,
+        39,
+        3,
+        55,
+        33,
+        65,
+        3,
+        38,
+        50,
+        50,
+        5,
+        2,
+        54,
+        1080
+      ],
+      "data": {
+        "version": 3,
+        "file": "/Users/alain/code/flemq/example/ts/src/common.ts",
+        "sources": [
+          "file:///Users/alain/code/flemq/example/ts/src/common.ts"
+        ],
+        "names": [],
+        "mappings": ";;;AAAA;;;;GAIG;AACI,MAAM,qBAAqB,GAAG,CAAC,CAAS,EAAQ,EAAE;IACvD,IAAI,CAAC,CAAC,CAAC,KAAK,CAAC,KAAK,UAAU,CAAC,CAAC,CAAC,QAAQ,EAAE,CAAC,CAAC,EAAE,CAAC;QAC5C,MAAM,IAAI,KAAK,CAAC,wBAAwB,CAAC,CAAC;IAC5C,CAAC;AACH,CAAC,CAAC;AAJW,QAAA,qBAAqB,yBAIhC",
+        "sourcesContent": [
+          "/**\n * Asserts that the given number is a positive integer.\n * @param n The number to assert.\n * @throws {Error} If the given number is not a positive integer.\n */\nexport const assertPositiveInteger = (n: number): void => {\n  if (!(n >>> 0 === parseFloat(n.toString()))) {\n    throw new Error(\"Not a positive integer\");\n  }\n};\n"
+        ],
+        "sourceRoot": ""
+      }
+    }
+  }
+}
