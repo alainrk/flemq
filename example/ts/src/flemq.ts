@@ -1,4 +1,5 @@
 import * as net from "net";
+import { assertPositiveInteger } from "./common";
 
 export type FlemQSerDer = "base64";
 
@@ -36,10 +37,6 @@ export class FlemQ {
     this.handler = handler;
   }
 
-  private clearHandler() {
-    this.handler = null;
-  }
-
   // connect client to server
   async connect(): Promise<FlemQ> {
     return new Promise((resolve, reject) => {
@@ -73,6 +70,8 @@ export class FlemQ {
     return data;
   }
 
+  // TODO:
+  // - Handle substring(1) here - type and errors
   deserialize(data: string): string {
     if (this.options.serder === "base64") {
       data = Buffer.from(data, "base64").toString();
@@ -93,7 +92,27 @@ export class FlemQ {
     });
   }
 
+  async pick(topic: string, offset: number): Promise<string> {
+    assertPositiveInteger(offset);
+
+    return new Promise((resolve, reject) => {
+      const handler = (data: string) => {
+        data = this.deserialize(data.substring(1));
+        resolve(data);
+      };
+      this.handler = handler.bind(this);
+
+      this.client.write(`PICK ${topic} ${offset}\r\n`, (error) => {
+        if (error) {
+          reject(error);
+        }
+      });
+    });
+  }
+
   async subscribe(topic: string, handler: Handler, offset = 0): Promise<void> {
+    assertPositiveInteger(offset);
+
     const handleSubscribeResponse = (data: string) => {
       const lines = data.split("\r\n");
       for (let line of lines) {

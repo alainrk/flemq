@@ -34,3 +34,15 @@ const sleep = async (msec: number) => {
     console.log("Received:", data);
   });
 })();
+
+// Pick
+(async () => {
+  const flemq = new FlemQ({
+    port: 22123,
+    serder: "base64",
+  });
+
+  await flemq.connect();
+  const res = await flemq.pick("ts_tests", 1000);
+  console.log("Pick Result:", res);
+})();
