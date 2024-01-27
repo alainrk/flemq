@@ -23,6 +23,9 @@ const sleep = async (msec: number) => {
 
 // Subscriber
 (async () => {
+  // Wait a bit for the publisher to start
+  await sleep(2000);
+
   const flemq = new FlemQ({
     port: 22123,
     serder: "base64",

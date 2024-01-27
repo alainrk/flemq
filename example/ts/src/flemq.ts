@@ -2,6 +2,7 @@ import * as net from "net";
 import { assertPositiveInteger } from "./common";
 
 export type FlemQSerDer = "base64";
+export type FlepType = string;
 
 export type FlemQClientOptions = {
   host?: string;
@@ -9,7 +10,16 @@ export type FlemQClientOptions = {
   serder: FlemQSerDer;
 };
 
+export type FlemQHandler = (response: FlepResponse) => void;
+export type FlepResponse = {
+  type: string;
+  data: string | null;
+};
+
 type Handler = (response: string) => void;
+
+export const FlepTypeString = "+";
+export const FlepTypeError = "-";
 
 export class FlemQ {
   private client: net.Socket;
@@ -19,6 +29,28 @@ export class FlemQ {
   constructor(opt: FlemQClientOptions) {
     this.client = new net.Socket();
     this.options = opt;
+  }
+
+  // private deserialize(line: string): FlepResponse {
+  private deserialize(line: string): string {
+    let [flepType, data] = [line[0], line.substring(1)];
+    let response: FlepResponse = { type: flepType, data: null };
+
+    if ([FlepTypeError, FlepTypeString].indexOf(flepType) !== -1) {
+      if (this.options.serder === "base64") {
+        response.data = Buffer.from(data, "base64").toString();
+      }
+    }
+
+    // return response;
+    return response.data || "";
+  }
+
+  private serialize(data: string): string {
+    if (this.options.serder === "base64") {
+      data = Buffer.from(data).toString("base64");
+    }
+    return data;
   }
 
   /**
@@ -63,22 +95,6 @@ export class FlemQ {
     });
   }
 
-  serialize(data: string): string {
-    if (this.options.serder === "base64") {
-      data = Buffer.from(data).toString("base64");
-    }
-    return data;
-  }
-
-  // TODO:
-  // - Handle substring(1) here - type and errors
-  deserialize(data: string): string {
-    if (this.options.serder === "base64") {
-      data = Buffer.from(data, "base64").toString();
-    }
-    return data;
-  }
-
   async push(topic: string, data: string): Promise<string> {
     data = this.serialize(data);
 
@@ -120,7 +136,7 @@ export class FlemQ {
           continue;
         }
         // Remove the first character (the type), and deserialize the data
-        handler(this.deserialize(line.substring(1)));
+        handler(this.deserialize(line));
       }
     };
 
