@@ -1,5 +1,4 @@
 import { FlemQ, FlepResponse } from "../src/flemq";
-import { promisify } from "util";
 
 const sleep = async (msec: number) => {
   return new Promise((resolve) => {

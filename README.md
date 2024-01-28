@@ -57,7 +57,7 @@ nc localhost 22123
 ## Node.js client example
 
 ```ts
-import { FlemQ } from "../src/flemq";
+import { FlemQ, FlepResponse } from "../src/flemq";
 
 const sleep = async (msec: number) => {
   return new Promise((resolve) => {
@@ -74,22 +74,27 @@ const sleep = async (msec: number) => {
 
   await flemq.connect();
   for (let i = 0; i < 100; i++) {
-    const res = await flemq.push("ts_tests", `Pushing message ${i}`);
-    console.log("Result:", res);
+    flemq.push("ts_tests", `Pushing message ${i}`, (data: FlepResponse) => {
+      console.log("Received from push:", data);
+    });
     await sleep(1500);
   }
 })();
 
 // Subscriber
 (async () => {
+  // Wait a bit for the publisher to start
+  await sleep(2000);
+
   const flemq = new FlemQ({
     port: 22123,
     serder: "base64",
   });
 
   await flemq.connect();
-  await flemq.subscribe("ts_tests", (data: string): void => {
-    console.log("Received:", data);
+
+  flemq.subscribe("ts_tests", (data: FlepResponse) => {
+    console.log("Received from subscribe:", data);
   });
 })();
 
@@ -101,7 +106,8 @@ const sleep = async (msec: number) => {
   });
 
   await flemq.connect();
-  const res = await flemq.pick("ts_tests", 1000);
-  console.log("Pick Result:", res);
+  flemq.pick("ts_tests", 3, (data: FlepResponse) => {
+    console.log("Received from pick:", data);
+  });
 })();
 ```
