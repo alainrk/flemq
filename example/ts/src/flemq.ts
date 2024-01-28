@@ -16,7 +16,7 @@ export type FlepResponse = {
   data: string | null;
 };
 
-type Handler = (response: string) => void;
+type Handler = (response: FlepResponse) => void;
 
 export const FlepTypeString = "+";
 export const FlepTypeError = "-";
@@ -31,19 +31,20 @@ export class FlemQ {
     this.options = opt;
   }
 
-  // private deserialize(line: string): FlepResponse {
-  private deserialize(line: string): string {
+  private deserialize(line: string): FlepResponse {
     let [flepType, data] = [line[0], line.substring(1)];
     let response: FlepResponse = { type: flepType, data: null };
 
-    if ([FlepTypeError, FlepTypeString].indexOf(flepType) !== -1) {
+    if ([FlepTypeString].indexOf(flepType) !== -1) {
       if (this.options.serder === "base64") {
         response.data = Buffer.from(data, "base64").toString();
       }
+    } else if ([FlepTypeError].indexOf(flepType) !== -1) {
+      // No need to deserialize errors coming from the server
+      response.data = data;
     }
 
-    // return response;
-    return response.data || "";
+    return response;
   }
 
   private serialize(data: string): string {
@@ -57,16 +58,21 @@ export class FlemQ {
    * Handle the response from the server, checking if the handler is set
    * @throws Error if handler is already set
    */
-  private handleResponse(data: any) {
+  private handleResponse(data: string) {
     if (this.handler == null) {
       throw new Error("Handler not set");
     }
-    this.handler(data.toString());
-  }
 
-  // TODO: Handle multiple commands waiting for a response at the same time (if needed)
-  private setHandler(handler: Handler) {
-    this.handler = handler;
+    data = data.toString();
+
+    const lines = data.split("\r\n");
+    for (let line of lines) {
+      if (line.trim().length === 0) {
+        continue;
+      }
+      // Remove the first character (the type), and deserialize the data
+      this.handler(this.deserialize(line));
+    }
   }
 
   // connect client to server
@@ -81,7 +87,7 @@ export class FlemQ {
       );
 
       this.client.on("data", (data) => {
-        this.handleResponse(data);
+        this.handleResponse(data.toString());
       });
 
       this.client.on("close", () => {
@@ -95,60 +101,36 @@ export class FlemQ {
     });
   }
 
-  async push(topic: string, data: string): Promise<string> {
+  push(topic: string, data: string, handler: Handler) {
     data = this.serialize(data);
 
-    return new Promise((resolve, reject) => {
-      this.setHandler(resolve.bind(this));
-      this.client.write(`PUSH ${topic} ${data}\r\n`, (error) => {
-        if (error) {
-          reject(error);
-        }
-      });
-    });
-  }
-
-  async pick(topic: string, offset: number): Promise<string> {
-    assertPositiveInteger(offset);
-
-    return new Promise((resolve, reject) => {
-      const handler = (data: string) => {
-        data = this.deserialize(data.substring(1));
-        resolve(data);
-      };
-      this.handler = handler.bind(this);
-
-      this.client.write(`PICK ${topic} ${offset}\r\n`, (error) => {
-        if (error) {
-          reject(error);
-        }
-      });
-    });
-  }
-
-  async subscribe(topic: string, handler: Handler, offset = 0): Promise<void> {
-    assertPositiveInteger(offset);
-
-    const handleSubscribeResponse = (data: string) => {
-      const lines = data.split("\r\n");
-      for (let line of lines) {
-        if (line.trim().length === 0) {
-          continue;
-        }
-        // Remove the first character (the type), and deserialize the data
-        handler(this.deserialize(line));
+    this.handler = handler.bind(this);
+    this.client.write(`PUSH ${topic} ${data}\r\n`, (error) => {
+      if (error) {
+        throw error;
       }
-    };
+    });
+  }
 
-    return new Promise((resolve, reject) => {
-      this.setHandler(handleSubscribeResponse.bind(this));
+  pick(topic: string, offset: number, handler: Handler) {
+    assertPositiveInteger(offset);
+    this.handler = handler.bind(this);
 
-      this.client.write(`SUBSCRIBE ${topic} ${offset}\r\n`, (error) => {
-        if (error) {
-          reject(error);
-        }
-        resolve();
-      });
+    this.client.write(`PICK ${topic} ${offset}\r\n`, (error) => {
+      if (error) {
+        throw error;
+      }
+    });
+  }
+
+  subscribe(topic: string, handler: Handler, offset = 0) {
+    assertPositiveInteger(offset);
+    this.handler = handler.bind(this);
+
+    this.client.write(`SUBSCRIBE ${topic} ${offset}\r\n`, (error) => {
+      if (error) {
+        throw error;
+      }
     });
   }
 }
