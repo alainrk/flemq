@@ -41,7 +41,6 @@ func (h *Handlers) Close() error {
 func (h *Handlers) HandlePush(req flep.Request) (uint64, error) {
 	tn := string(req.Args[0])
 
-	// XXX: Auto-creates topic if it doesn't exist for now.
 	if _, ok := h.topics[tn]; !ok {
 		h.topics[tn] = topic.New(tn, h.config.Store)
 	}
