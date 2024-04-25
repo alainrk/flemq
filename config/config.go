@@ -30,9 +30,9 @@ type StoreConfig struct {
 }
 
 type TLSConfig struct {
-	Enabled  bool `default:"false"`
 	CertFile string
 	KeyFile  string
+	Enabled  bool `default:"false"`
 }
 
 type ConnectionConfig struct {

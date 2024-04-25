@@ -17,16 +17,16 @@ import (
 type ClientStatus string
 
 type Server struct {
-	config   config.Config
-	clients  map[uuid.UUID]*Client
-	listener net.Listener
 	handlers handlers.Handlers
+	listener net.Listener
+	clients  map[uuid.UUID]*Client
+	config   config.Config
 }
 
 type Client struct {
-	Id         uuid.UUID
 	Connection net.Conn
 	FLEPReader *flep.Reader
+	Id         uuid.UUID
 }
 
 func NewServer(c config.Config) (server *Server, closer func()) {
@@ -40,7 +40,7 @@ func NewServer(c config.Config) (server *Server, closer func()) {
 		}
 
 		ctls := &tls.Config{Certificates: []tls.Certificate{cert}}
-		listener, err = tls.Listen("tcp", c.Addr, ctls)
+		listener, _ = tls.Listen("tcp", c.Addr, ctls)
 	} else {
 		listener, err = net.Listen("tcp", c.Addr)
 	}
@@ -100,9 +100,7 @@ func (s Server) RemoveClient(id uuid.UUID) {
 }
 
 func (s Server) HandleClient(id uuid.UUID) {
-	var (
-		c *Client = s.clients[id]
-	)
+	c := s.clients[id]
 	defer s.RemoveClient(id)
 
 	log.Println("New client:", c.Connection.RemoteAddr())

@@ -7,12 +7,12 @@ import (
 
 func TestIntResponse(t *testing.T) {
 	tests := []struct {
-		input    int64
 		expected []byte
+		input    int64
 	}{
-		{42, []byte(":42\r\n")},
-		{-123, []byte(":-123\r\n")},
-		{0, []byte(":0\r\n")},
+		{[]byte(":42\r\n"), 42},
+		{[]byte(":-123\r\n"), -123},
+		{[]byte(":0\r\n"), 0},
 	}
 
 	for _, test := range tests {
@@ -78,11 +78,11 @@ func TestBulkStringResponse(t *testing.T) {
 
 func TestBooleanResponse(t *testing.T) {
 	tests := []struct {
-		input    bool
 		expected []byte
+		input    bool
 	}{
-		{true, []byte("#1\r\n")},
-		{false, []byte("#0\r\n")},
+		{[]byte("#1\r\n"), true},
+		{[]byte("#0\r\n"), false},
 	}
 
 	for _, test := range tests {
