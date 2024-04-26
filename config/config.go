@@ -15,12 +15,14 @@ const (
 	StoreTypeMqueue StoreType = "mqueue"
 )
 
-type Config struct {
-	Addr       string `default:":22123"`
-	Store      StoreConfig
-	TLS        TLSConfig
-	Connection ConnectionConfig
-}
+type (
+	Config struct {
+		Addr       string `default:":22123"`
+		Store      StoreConfig
+		TLS        TLSConfig
+		Connection ConnectionConfig
+	}
+)
 
 type StoreConfig struct {
 	// Type of store to use, available: [mqueue, fqueue]

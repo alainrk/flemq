@@ -9,24 +9,24 @@ const TEST_PREFIX = "TEST_"
 
 func TestLoadEnv(t *testing.T) {
 	tests := []struct {
-		name       string
-		envValue   string
 		defaultVal any
 		expected   any
+		name       string
+		envValue   string
 	}{
 		// Test cases for string
-		{"StringSet", "test_value", "default_value", "test_value"},
-		{"StringNotSet", "", "default_value", "default_value"},
-		{"StringEmptySet", "", "", ""},
+		{"default_value", "test_value", "StringSet", "test_value"},
+		{"default_value", "default_value", "StringNotSet", ""},
+		{"", "", "StringEmptySet", ""},
 
 		// Test cases for bool
-		{"BoolTrueSet", "true", false, true},
-		{"BoolFalseSet", "false", true, false},
-		{"BoolNotSet", "", true, true},
+		{false, true, "BoolTrueSet", "true"},
+		{true, false, "BoolFalseSet", "false"},
+		{true, true, "BoolNotSet", ""},
 
 		// Test cases for int
-		{"IntSet", "42", 0, 42},
-		{"IntNotSet", "", 10, 10},
+		{0, 42, "IntSet", "42"},
+		{10, 10, "IntNotSet", ""},
 	}
 
 	for _, tt := range tests {
