@@ -29,7 +29,7 @@ go run example/producer-tls/*
 
 ## Quick and dirty usage
 
-It uses a redis-like protocol, completely text based, so you can use netcat to test it.
+It uses a redis-like protocol, completely text based, so you can use `netcat` to test it.
 
 ```sh
 nc localhost 22123
