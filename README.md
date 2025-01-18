@@ -31,6 +31,22 @@ go run example/producer-tls/*
 
 It uses a redis-like protocol, completely text based, so you can use `netcat` to test it.
 
+```
+# Push a message into a topic
+push <topic> <message>
+
+# Pick a message from a topic at offset
+pick <topic> <offset>
+
+# Subscribe to a topic (optionally starting from an offset)
+subscribe <topic> [<start_offset>]
+
+# Quit connection to the server
+exit
+```
+
+Session example:
+
 ```sh
 nc localhost 22123
 
