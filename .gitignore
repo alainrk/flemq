@@ -24,3 +24,4 @@ bin
 cert
 .env
 node_modules
+.vscode
