@@ -29,20 +29,21 @@ go run example/producer-tls/*
 
 ## Quick and dirty usage
 
-It uses a redis-like protocol, completely text based, so you can use `netcat` to test it.
+It uses **FLEP** (FleMQ Protocol), a simple text-based command protocol, so you can use `netcat` to test it.
+Commands are _case-insensitive_. So, for example, you can use `PUSH` and `push` interchangeably.
 
 ```
 # Push a message into a topic
-push <topic> <message>
+PUSH <topic> <message>
 
 # Pick a message from a topic at offset
-pick <topic> <offset>
+PICK <topic> <offset>
 
 # Subscribe to a topic (optionally starting from an offset)
-subscribe <topic> [<start_offset>]
+SUBSCRIBE <topic> [<start_offset>]
 
 # Quit connection to the server
-exit
+EXIT
 ```
 
 Session example:
@@ -50,19 +51,19 @@ Session example:
 ```sh
 nc localhost 22123
 
-> push topic_x message
+> PUSH topic_x message
 :0
 
-> push topic_x message_2
+> PUSH topic_x message_2
 :1
 
-> pick topic_y 0
+> PICK topic_y 0
 -topic topic_y does not exist
 
-> pick topic_x 1
+> PICK topic_x 1
 +message_2
 
-> subscribe topic_x
+> SUBSCRIBE topic_x
 +message
 +message_2
 ...
