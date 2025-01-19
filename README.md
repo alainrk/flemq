@@ -4,7 +4,7 @@
 
 **Flexible Message Queue**
 
-FleMQ is a message queue system implemented in Go, drawing inspiration from Kafka's offset-based message persistence and Redis's simplicity in protocol design. At its core, it implements a custom protocol called FLEP (FleMQ Protocol), which takes cues from [Redis RESP](https://redis.io/docs/latest/develop/reference/protocol-spec/)) while maintaining a more focused, simple approach for message queue operations.
+FleMQ is a message queue system implemented in Go, drawing inspiration from Kafka's offset-based message persistence and Redis's simplicity in protocol design. At its core, it implements a custom protocol called FLEP (FleMQ Protocol), which borrows it design from [Redis RESP](https://redis.io/docs/latest/develop/reference/protocol-spec/) maintaining a simple approach for message queue operations.
 
 ## Dev
 
