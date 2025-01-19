@@ -73,6 +73,9 @@ nc localhost 22123
 
 ## Node.js client example
 
+In `./example/ts` you can find an example of how to use the client in Node.js to send and receive messages.
+I have implemented a simple TS client that implements the FLEP protocol and communicate with the server, abstracting the operations you see here.
+
 ```ts
 import { FlemQ, FlepResponse } from "../src/flemq";
 
